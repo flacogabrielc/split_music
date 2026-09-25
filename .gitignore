@@ -1,0 +1,34 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  spleeter — archivos que NO se versionan
+#  (el proyecto pesa 7,1 GB, pero solo ~160 KB son scripts + docs)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 1) Entorno virtual: 5,9 GB / 31.494 archivos.
+#    Se recrea en la otra máquina con:
+#      python3 -m venv venv && ./venv/bin/pip install -r requirements.txt
+venv/
+venv-analisis/
+
+# 2) Audio fuente (con copyright) y sus derivados.
+#    Cada uno pone su propio mp3/ y regenera output/ con los scripts.
+mp3/
+output/
+
+# 3) Área de trabajo temporal de Demucs (la recrea scripts/procesar.sh con mkdir -p)
+separated/
+
+# 4) Residuos de Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 5) Backups locales comprimidos (el historial real lo da git)
+*.tar.gz
+*.zip
+
+# 6) Sistema / editores
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

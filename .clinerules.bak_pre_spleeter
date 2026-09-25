@@ -1,0 +1,93 @@
+# Reglas del proyecto spleeter
+
+## Convenciones de rutas
+- La carpeta de audio fuente es ~/proyectos/spleeter/mp3/ (o mp3/ relativo a la raíz del proyecto).
+- Cuando el usuario mencione un archivo de audio (mp3, wav, flac, ogg, m4a), asumí que está en mp3/ a menos que indique una ruta absoluta o relativa distinta.
+- Los stems generados por Demucs viven en separated/<modelo>/<nombre_cancion>/.
+- Las mezclas, filtros y loops generados viven en output/<cancion>/<modelo>/ y output/<cancion>/loops/ (ver más abajo).
+- Los scripts viven en scripts/ y siempre se invocan como ./scripts/<nombre>.sh desde la raíz del proyecto.
+
+## Estructura de output/
+
+Las salidas se organizan por canción y por contexto:
+
+  output/<cancion>/<modelo_o_contexto>/<archivo>
+  output/<cancion>/loops/<archivo>
+
+- <cancion>: nombre del archivo fuente sin extensión (ej: "Down by the Seaside").
+- <modelo_o_contexto>: el modelo de Demucs del que salieron los stems (htdemucs,
+  htdemucs_6s, mdx_extra...) o "loops" para los loops.
+- Si una herramienta no puede deducir la canción (por ejemplo, un archivo suelto),
+  escribe en output/_sueltos/ (o output/_sueltos/loops/) y lo avisa al usuario.
+- output/logs/ es global (logs de Demucs) y no cambia.
+
+Ejemplos:
+  output/Down by the Seaside/htdemucs/base_ritmica.wav
+  output/Down by the Seaside/htdemucs_6s/bass_limpio.wav
+  output/Down by the Seaside/loops/loop_8c_110bpm.wav
+
+Los scripts deducen canción y modelo solos a partir de la ruta de entrada
+(separated/<modelo>/<cancion>/... o output/<cancion>/<contexto>/...).
+Con --out-dir <ruta> se puede forzar un destino explícito (tiene prioridad).
+
+## Convenciones de nombres
+- Cuando el usuario diga "el archivo X" o "la canción X", buscá primero en mp3/ y también en sus subcarpetas (puede haber subcarpetas por canción).
+- Si el nombre tiene espacios, usá comillas dobles en los comandos.
+
+## Comportamiento por defecto
+- Antes de ejecutar cualquier script o comando que modifique archivos, mostrá el comando exacto que vas a correr y esperá confirmación (salvo que el usuario diga "dale" o "ejecutá directamente").
+- Si un archivo de salida ya existe, avisá antes de sobrescribirlo.
+- No toques la carpeta venv/ ni reinstales dependencias sin pedirlo.
+- No borres archivos de mp3/ ni de separated/ sin confirmación explícita.
+
+## Roles
+- Cuando el usuario diga "actuá como <rol>", leé AGENTES.md y adoptá ese rol (Separador, Mezclador, Masterizador, Looper).
+- Respetá las capacidades y límites de cada rol tal como están documentados en AGENTES.md.
+
+## Idiomas y formatos
+- Respondé en español.
+- Los formatos de audio soportados incluyen mp3, wav, flac, ogg, m4a (Demucs usa ffmpeg internamente).
+- La salida por defecto de Demucs es WAV de 44.1 kHz estéreo.
+
+## Elección de modelo en el rol Separador
+
+Cuando el usuario pida separar, elegí el modelo según esta tabla:
+
+- "4 pistas" / "separame" (sin especificar) → htdemucs
+- "voz e instrumental" / "karaoke" → htdemucs con --two-stems=vocals
+- "guitarra vs resto" / "dame la guitarra" / "aislá la guitarra" → htdemucs_6s con --two-stems=guitar
+- "6 pistas" / "con guitarra y piano" → htdemucs_6s
+- "solo batería y bajo" / "base rítmica" → htdemucs (separación completa) y usá solo drums.wav + bass.wav (o directamente ./scripts/mezclar.sh <carpeta> drums bass --out base_ritmica)
+- "mejor calidad" / "fine-tuned" / "máxima calidad" → htdemucs_ft
+- "piano aislado" → htdemucs_6s (separación completa) y usá piano.wav
+- "probá otro modelo" / "comparar" → mdx_extra
+
+Regla de desempate: si el pedido menciona guitarra o piano, usá htdemucs_6s.
+Si menciona fine-tuned o mejor calidad, usá htdemucs_ft.
+En cualquier otro caso, usá htdemucs.
+
+Si tenés dudas razonables sobre qué modelo usar, preguntale al usuario antes de elegir.
+
+Nota: en Demucs 4.1.0 NO existe --stems (falla con "unrecognized arguments").
+Solo existen --two-stems=X (binario) y los flags: -n, -o, -d, --shifts, --overlap,
+--segment/--no-split, --int24, --float32, --clip-mode, --flac, --mp3, -j.
+
+## Analista (acordes)
+
+Cuando el usuario pida acordes / progresión / "en qué acorde está" un audio:
+
+- "acordes de X" / "¿qué acordes tiene X?" / "la progresión de X"
+    → ./scripts/analizar.sh "X.mp3"                (busca el nombre en mp3/ y subcarpetas)
+- "acordes del bajo / de la guitarra / del piano de X"
+    → ./scripts/analizar.sh "separated/<modelo>/X/<stem>.wav" --out <stem>
+- "analizá todos los stems de X" / "los acordes de cada instrumento de X"
+    → ./scripts/analizar.sh "separated/<modelo>/X" --stems
+
+Salida SIEMPRE en output/<cancion>/analisis/<nombre>_acordes.txt (+ .json + .html).
+Si no se puede deducir la canción: output/_sueltos/analisis/ (y se avisa).
+
+- Herramienta: chord-extractor 0.1.3 con el plugin Chordino (nnls-chroma), instalado en venv/
+  con: pip install --ignore-requires-python --no-build-isolation chord-extractor
+- El Analista NO detecta BPM ni tonalidad (pendiente): si lo piden, avisarlo.
+- Formatos de salida: .txt con "timestamp_segundos acorde" (una línea por segmento) y .json con
+  los mismos datos + metadatos. `N` significa "sin acorde detectado".

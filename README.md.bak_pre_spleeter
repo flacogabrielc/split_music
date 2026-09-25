@@ -19,8 +19,7 @@ loops para practicar guitarra o armar remixes. Todo el procesamiento es **local*
 ~/proyectos/spleeter/
 ├── venv/         # entorno virtual (Demucs + torch). NO TOCAR
 ├── mp3/          # canciones de entrada (solo lectura)
-├── separated/    # área de trabajo temporal de Demucs (el script mueve los stems a
-│                 # output/<cancion>/spleeter/<modelo>/)
+├── separated/    # salida automática de Demucs: separated/<modelo>/<tema>/*.wav
 ├── output/       # salidas organizadas: output/<cancion>/<modelo>/, .../loops/ y .../analisis/
 │                 # + output/_sueltos/ (sin contexto) y output/logs/ (global)
 ├── scripts/      # los scripts de automatización
@@ -67,10 +66,10 @@ cd ~/proyectos/spleeter
 ./scripts/separar.sh "Down by the Seaside.mp3"
 
 # 2) base rítmica para tocar encima (batería + bajo)
-./scripts/mezclar.sh "output/Down by the Seaside/spleeter/htdemucs" drums bass --out base_ritmica
+./scripts/mezclar.sh "separated/htdemucs/Down by the Seaside" drums bass --out base_ritmica
 
 # 3) dejar solo el cuerpo del bajo
-./scripts/limpiar.sh "output/Down by the Seaside/spleeter/htdemucs/bass.wav" lowpass 220 --out bajo_limpio
+./scripts/limpiar.sh "separated/htdemucs/Down by the Seaside/bass.wav" lowpass 220 --out bajo_limpio
 
 # 4) loop exacto de 8 compases a 110 bpm, arrancando en el segundo 32.5
 ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 110 8 --start 32.5
@@ -121,13 +120,13 @@ Usa `amix` con **`normalize=0`** a propósito: no reescala nada, así se mantien
 las proporciones de volumen originales. Volúmenes individuales con `VOLS`:
 
 ```bash
-./scripts/mezclar.sh "output/cancion/spleeter/htdemucs" drums bass --out base_ritmica
-VOLS="drums=0.9,bass=0.7" ./scripts/mezclar.sh output/cancion/spleeter/htdemucs drums bass --out base
-./scripts/mezclar.sh output/cancion/spleeter/htdemucs_6s drums bass other guitar --out banda
+./scripts/mezclar.sh "separated/htdemucs/cancion" drums bass --out base_ritmica
+VOLS="drums=0.9,bass=0.7" ./scripts/mezclar.sh separated/htdemucs/cancion drums bass --out base
+./scripts/mezclar.sh separated/htdemucs_6s/cancion drums bass other guitar --out banda
 ```
 
 **Dónde escribe:** `output/<cancion>/<modelo>/<nombre>.wav`, deduciendo canción y modelo de la
-carpeta de stems (`output/Down by the Seaside/spleeter/htdemucs` → `output/Down by the Seaside/htdemucs/`).
+carpeta de stems (`separated/htdemucs/Down by the Seaside` → `output/Down by the Seaside/htdemucs/`).
 Con `--out-dir <ruta>` se fuerza otro destino.
 
 > ⚠️ Con `normalize=0` la suma puede **saturar**. Si escuchás distorsión, bajá los
@@ -149,9 +148,9 @@ Con `--out-dir <ruta>` se fuerza otro destino.
 | `--tipo-ancho <q\|h\|o>` | `q` | Unidad del ancho (Q, Hz u octavas) |
 
 ```bash
-./scripts/limpiar.sh output/cancion/spleeter/htdemucs/bass.wav lowpass 220 --out bass_limpio
-./scripts/limpiar.sh output/cancion/spleeter/htdemucs/vocals.wav highpass 120
-./scripts/limpiar.sh output/cancion/spleeter/htdemucs/drums.wav bandpass 8000 --tipo-ancho o --ancho 1
+./scripts/limpiar.sh separated/htdemucs/cancion/bass.wav lowpass 220 --out bass_limpio
+./scripts/limpiar.sh separated/htdemucs/cancion/vocals.wav highpass 120
+./scripts/limpiar.sh separated/htdemucs/cancion/drums.wav bandpass 8000 --tipo-ancho o --ancho 1
 ```
 
 Nota: en `bandpass` la `frecuencia` es el **centro** de la banda, y no acepta
@@ -234,10 +233,10 @@ la canción). Acepta el **nombre suelto** del archivo (lo busca en `mp3/` y subc
 ./scripts/analizar.sh "Down by the Seaside.mp3"
 
 # solo un instrumento
-./scripts/analizar.sh "output/Boogie with Stu/spleeter/htdemucs_6s/bass.wav" --out bajo
+./scripts/analizar.sh "separated/htdemucs_6s/Boogie with Stu/bass.wav" --out bajo
 
 # todos los stems, uno por uno
-./scripts/analizar.sh "output/Boogie with Stu/spleeter/htdemucs_6s" --stems
+./scripts/analizar.sh "separated/htdemucs_6s/Boogie with Stu" --stems
 ```
 
 Herramienta: **chord-extractor 0.1.3** con el plugin **Chordino** (`nnls-chroma`), instalado en
@@ -359,12 +358,12 @@ sistema, y al terminar `separar.sh` te avisa si detectó ese warning.
 - **`OMP_NUM_THREADS=$(nproc)`**: torch arranca con 4 hilos por defecto en este
   equipo (8 núcleos disponibles) → se le da todo lo que hay.
 - **Organización de `output/`**: los scripts deducen `<cancion>` y `<modelo>` desde la ruta de
-  entrada con el helper `deducir_contexto()` de `_comun.sh` (reconoce `output/<cancion>/spleeter/<modelo>/`
+  entrada con el helper `deducir_contexto()` de `_comun.sh` (reconoce `separated/<modelo>/<cancion>/`
   y `output/<cancion>/<contexto>/`). Si no puede deducirlo, escribe en `output/_sueltos/` y avisa.
   `--out-dir <ruta>` fuerza el destino.
 - **Caso especial de `analizar.sh`**: si el audio viene de `mp3/`, la canción se deduce del
   **nombre del archivo** (los demás scripts usan `deducir_contexto()`, que solo entiende
-  `output/`; y `separated/<modelo>/<cancion>/` por compatibilidad con datos viejos).
+  `separated/` y `output/`).
 - **Instalación de chord-extractor (rol Analista)**: su metadata declara `Requires-Python: <3.12`,
   así que en Python 3.12 hay que forzar el pin, y `vamp` necesita numpy en el entorno de build:
   ```bash
@@ -422,7 +421,7 @@ ls -lh output/
 # para borrar solo las pruebas:
 rm -f output/test_*.wav output/prueba_30s_*.wav
 rm -f "output/Down by the Seaside/loops/base_loop_8c.wav"
-rm -rf output/prueba_30s
+rm -rf separated/htdemucs/prueba_30s
 ```
 
 El clip de prueba era un recorte de 30 s (a partir del segundo 60) del tema
