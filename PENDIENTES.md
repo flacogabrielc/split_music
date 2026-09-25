@@ -13,8 +13,9 @@
 
 - **Estructura consolidada por canción**: `output/<cancion>/{spleeter/<modelo>, <modelo>, loops, analisis}`
   (+ `output/_sueltos/` y `output/logs/`). `separated/` quedó como *staging temporal* de Demucs.
-- **Scripts** (11): `separar.sh`, `mezclar.sh`, `limpiar.sh`, `loop.sh`, `procesar.sh`,
+- **Scripts** (12): `separar.sh`, `mezclar.sh`, `limpiar.sh`, `loop.sh`, `procesar.sh`,
   `analizar.sh` + `analizar.py` + `analizar_bpm.py` + `acordes_html.py` + `_comun.sh`
+  + `_beats.py` (busca el beat más cercano a un segundo; lo usa `loop.sh`)
   + `validar_digitaciones.py` (verificador de la tabla de voicings).
 - **Roles documentados** en `AGENTES.md`: Separador, Mezclador, Masterizador, Looper, **Analista**.
 - **Rol Analista operativo**: chord-extractor 0.1.3 (Chordino) → `.txt` + `.json` + `.html`
@@ -42,8 +43,8 @@
 - **Canciones procesadas**:
   - `Down by the Seaside`: 4 stems (htdemucs) + 6 stems (htdemucs_6s) + loop + mezclas + análisis (84 segmentos)
   - `Boogie with Stu`: 6 stems (htdemucs_6s) + análisis por stem (6) + análisis de la mezcla (43 segmentos)
-- **Docs**: `.clinerules` (135 líneas), `AGENTES.md` (451), `README.md` (516),
-  `PENDIENTES.md` (149) + backups `.bak_pre_spleeter` de los 3
+- **Docs**: `.clinerules` (140 líneas), `AGENTES.md` (463), `README.md` (532),
+  `PENDIENTES.md` (154) + backups `.bak_pre_spleeter` de los 3
   (versión anterior al cambio de estructura).
 - **Repo en GitHub** (24/Sep): `https://github.com/flacogabrielc/split_music` — **público**, rama `main`.
   21 archivos / 492 KB (scripts + docs). `venv/`, `mp3/`, `output/` y `separated/` quedaron en `.gitignore`.
@@ -72,19 +73,23 @@
   133.12). Nuevo flag `--bpm <n>` y errores claros (BPM pasado dos veces, falta de análisis, canción
   no deducible). **7 pruebas** cubriendo compatibilidad hacia atrás, modo automático, `--bpm` y los 3
   caminos de error.
+- **Looper: el inicio se ajusta al tiempo, sin tocar el audio** (24/Sep): `loop.sh` mueve el `--start`
+  al beat más cercano (nuevo `scripts/_beats.py`, helper interno que lee `<cancion>_tempo.json`) y lo
+  informa en ms: `--start 32.5` → **32.4151** (−85 ms). `--sin-cuantizar` mantiene el corte exacto.
+  Si el beat más cercano está fuera de la grilla (intro sin pulsos) no lo mueve y avisa el motivo.
+  **El audio no se procesa**: verificado comparando el md5 del PCM decodificado del loop contra un
+  corte directo de `ffmpeg` → **idénticos**. Se midió también que los cambios de acorde NO sirven para
+  inferir el downbeat (máx. 31% de alineación) y que el tempo de la toma respira (92.3 a 95.7 BPM),
+  así que no se promete "compás 1" ni se estira el audio.
 
 ## ⏳ Pendientes (en orden sugerido)
 
-1. **Looper: ajustar el `--start` a la grilla de beats** — el BPM ya es automático, pero *dónde empieza*
-   el loop lo seguís eligiendo a ojo. Los tiempos de beat ya están guardados en
-   `<cancion>_tempo.json`: `loop.sh` podría leerlos y **proponer/cuantizar** el `--start` al tiempo
-   más cercano, para que el loop arranque en compás y no a mitad. Hoy la única forma es mirar el JSON.
-2. **Mejoras del HTML** charladas: filtro por instrumento, comparar stems lado a lado, barras por
+1. **Mejoras del HTML** charladas: filtro por instrumento, comparar stems lado a lado, barras por
    compás. (Las métricas de BPM/tonalidad y las digitaciones ya se agregaron el 24/Sep.)
-3. **Descripción del repo en GitHub** (opcional, 30 s en la web): el tagline
+2. **Descripción del repo en GitHub** (opcional, 30 s en la web): el tagline
    *"Un separador de pistas y creador de partituras y acordes"* quedó solo en el commit inicial
    `ad87b8d`; el `README.md` actual arranca distinto. Se puede pegar en *Settings → Description*.
-4. **Analista: estructura del tema** (intro / verso / estribillo) — es lo que le queda al rol después
+3. **Analista: estructura del tema** (intro / verso / estribillo) — es lo que le queda al rol después
    de BPM y tonalidad. Se haría con `librosa.segment` (auto-similitud) sobre el croma ya calculado.
 
 ## 🔗 Repositorio (GitHub)

@@ -132,4 +132,9 @@ Duración = (60 / BPM) * 4 * compases (asume 4/4).
 - Si el BPM detectado cae fuera de 75-170 bpm el script avisa y muestra la mitad y el doble.
   NO lo corrijas por tu cuenta ni lo des por bueno: preguntale al usuario cuál usar.
 - Si falta el _tempo.txt, el script aborta con el comando exacto para generarlo (analizar.sh).
-- El --start lo elige el usuario; el script todavía NO lo ajusta a la grilla de beats (pendiente).
+- El --start SÍ se ajusta solo al tiempo más cercano (beats de <cancion>_tempo.json) y lo informa en
+  ms. NO modifica el audio: solo cambia dónde corta. Con --sin-cuantizar corta exacto en lo pedido.
+- NO puede saber cuál de los 4 tiempos es el "1" del compás (librosa da pulsos, no compases): si el
+  usuario pregunta por el downbeat o por "el compás 1", aclaralo en vez de inventarlo.
+- Tampoco estira audio: la tonalidad y el tempo del loop son los del disco (el estiramiento está en el
+  backlog, todavía no existe).

@@ -34,6 +34,7 @@ loops para practicar guitarra o armar remixes. Todo el procesamiento es **local*
 │   ├── analizar.py   # wrapper de chord-extractor que usa analizar.sh
 │   ├── analizar_bpm.py  # BPM y tonalidad con librosa (lo usa analizar.sh)
 │   ├── acordes_html.py  # genera el informe HTML con diagramas SVG
+│   ├── _beats.py        # busca el tiempo (beat) más cercano a un segundo; lo usa loop.sh
 │   └── validar_digitaciones.py  # verifica que la tabla de voicings sea correcta
 ├── .clinerules             # reglas del proyecto para Cline (rutas, roles, confirmaciones)
 ├── AGENTES.md              # roles de trabajo para pedir tareas en lenguaje natural
@@ -225,6 +226,21 @@ de dónde salió:
 doble del real (te muestra los dos valores) y **no lo corrige solo**: lo forzás con `--bpm <n>`.
 Si la canción todavía no tiene análisis, aborta indicándote el comando exacto
 (`./scripts/analizar.sh "<cancion>.mp3"`).
+
+**El inicio se ajusta solo al tiempo más cercano.** Si el `--start` no cae en un pulso, el loop
+arrancaría a mitad de tiempo y sonaría "tropezado" al repetir. El script lo mueve al beat más
+cercano (leyendo los tiempos que guardó el Analista en `<cancion>_tempo.json`) y te lo informa:
+
+```bash
+./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --start 32.5
+#   Desde     : 32.4151 s  hasta 53.284668 s   ← ajustado a la grilla desde 32.5 s (-84.9 ms)
+```
+
+⚠️ **El audio no se modifica**: solo cambia *dónde* corta. Verificado comparando el md5 del PCM
+decodificado del loop contra un corte directo con `ffmpeg`: son **idénticos**. Como no hay
+estiramiento, el loop conserva **la tonalidad y el tempo originales del disco**.
+Si el tiempo más cercano queda fuera de la grilla (por ejemplo en un intro sin pulsos) no lo mueve
+y te avisa; con `--sin-cuantizar` cortás exacto en el `--start` que pediste.
 
 Verificación real de una corrida: esperado `17.454560 s`, obtenido `17.454558 s`
 → **diferencia 0.0 ms**: corte sample-perfecto. Usá `--fade 5` si notás un click

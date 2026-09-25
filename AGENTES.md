@@ -307,6 +307,11 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
   `output/<cancion>/analisis/<cancion>_tempo.txt` (el análisis del **mix**, que es el más confiable),
   lo **redondea** al entero más cercano e informa de dónde salió (exacto + tonalidad). También podés
   pasarlo con `--bpm <n>`.
+- **Ajustar el inicio al tiempo más cercano**: si el `--start` no cae en un pulso, mueve el corte
+  al beat más cercano (de `<cancion>_tempo.json`) y lo informa en ms. Evita el loop "tropezado".
+  **No modifica el audio** (solo cambia dónde corta): verificado por md5 contra un corte directo.
+  Con `--sin-cuantizar` corta exacto donde le pidas. Si el beat más cercano está fuera de la grilla
+  (intro sin pulsos), no lo mueve y avisa el motivo.
 - **Advertir sobre la octava**: si el BPM detectado cae fuera de **75-170 bpm**, avisa de que puede ser
   la mitad o el doble del real y muestra los dos valores… pero **no lo corrige solo** (el usuario decide
   con `--bpm`). Caso real: el stem de batería de *Boogie with Stu* da 66.56 cuando el tema es 133.21.
@@ -332,9 +337,12 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
 **Límites (NO hace):**
 
 - ❌ No separa, no mezcla y no filtra.
-- ❌ **No ajusta el `--start` a la grilla de beats**: el BPM sí es automático, pero *dónde empieza*
-  el loop lo elegís vos. Si el `--start` no cae en un tiempo, el loop arranca a mitad de compás
-  (*pendiente*: usar los beats detectados del `_tempo.json` para sugerir el `--start` exacto).
+- ❌ **No sabe cuál de los 4 tiempos es el "1" del compás** (downbeat): librosa detecta pulsos, no
+  compases. El loop arranca **en tiempo**, pero puede quedar arrancando en el 2º, 3º o 4º tiempo.
+  Aclaralo en vez de inventarlo.
+- ❌ **No ajusta la duración al tempo local del tramo**: usa un BPM parejo para todo el tema. En una
+  toma en vivo (sin click) el tempo respira, así que un loop de 8 compases puede quedar desviado
+  ~100-300 ms. Es el límite físico de cortar sin estirar.
 - ❌ **No cambia el tempo del audio** (no hay time-stretch/warp): solo **recorta**. Si el BPM real del
   tema no es exactamente el indicado, el loop se va a desfasar al repetir.
 - ⚠️ Asume **compás de 4/4**: para 3/4, 6/8 o 7/8 la fórmula no aplica *(pendiente)*.
@@ -347,7 +355,11 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
 ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 110 8 --start 32.5 --out base_loop_8c
 
 # SIN BPM: lo detecta solo (Down by the Seaside = 91.85 -> 92 bpm) = 20.869568 s
+#   (y el inicio se ajusta solo al tiempo más cercano: 32.5 -> 32.4151)
 ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --start 32.5
+
+# cortar EXACTO donde le pedís, sin ajustar a la grilla
+./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --start 32.5 --sin-cuantizar
 
 # forzar un BPM puntual en vez del detectado
 ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --bpm 92.5

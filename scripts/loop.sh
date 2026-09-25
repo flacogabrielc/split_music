@@ -9,6 +9,7 @@ SALIDA=""
 START="0"
 FADE="0"
 BPM_OPT=""
+CUANTIZAR=1
 POSICIONALES=()
 
 # Lee el valor de una clave en un archivo "<clave> <valor>" (los _tempo.txt del Analista).
@@ -30,6 +31,11 @@ Si omitís el BPM, se usa el DETECTADO por el Analista para esa canción
 (output/<cancion>/analisis/<cancion>_tempo.txt, error < 1%). Se redondea al entero
 más cercano y se avisa si cae fuera del rango habitual de un loop (75-170 bpm).
 
+El INICIO se ajusta solo al TIEMPO (beat) más cercano, para que el loop arranque en pulso
+y no a mitad de tiempo (que es lo que suena tropezado al repetir). El audio NO se modifica:
+solo cambia dónde se corta. Si el tiempo más cercano queda fuera de la grilla (por ejemplo
+en un intro sin pulsos), no lo mueve y te avisa.
+
 Argumentos:
   <archivo_wav>  Archivo de entrada (ruta o relativa a la raíz)
   <bpm>          Tempo en pulsos por minuto (ej: 110). Opcional si ya hay análisis.
@@ -37,7 +43,8 @@ Argumentos:
 
 Opciones:
   --bpm <n>          BPM explícito (alternativa a pasarlo como 2º argumento)
-  --start <seg>      Segundo donde empieza el loop (default: 0)
+  --start <seg>      Segundo donde empieza el loop (default: 0). Se ajusta al tiempo más cercano.
+  --sin-cuantizar    Corta EXACTO en --start, sin ajustar al tiempo más cercano
   --out <nombre>     Nombre de salida (sin .wav). Default: <archivo>_loop_<n>c_<bpm>bpm
   --out-dir <ruta>   Carpeta de destino explícita (relativa a la raíz o absoluta).
                      Si se indica, NO se deduce la estructura.
@@ -54,6 +61,9 @@ Ejemplos:
 
   # forzar un BPM puntual
   ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --bpm 92.5
+
+  # cortar EXACTO en el segundo pedido, sin ajustar a la grilla
+  ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --start 32.5 --sin-cuantizar
 EOF
 }
 
@@ -63,6 +73,7 @@ while [[ $# -gt 0 ]]; do
     -f|--forzar) FORZAR=1; shift ;;
     --start)     [[ $# -ge 2 ]] || die "--start necesita un valor en segundos."; START="$2"; shift 2 ;;
     --bpm)       [[ $# -ge 2 ]] || die "--bpm necesita un número."; BPM_OPT="$2"; shift 2 ;;
+    --sin-cuantizar) CUANTIZAR=0; shift ;;
     --out)       [[ $# -ge 2 ]] || die "--out necesita un nombre."; SALIDA="$2"; shift 2 ;;
     --out-dir)   [[ $# -ge 2 ]] || die "--out-dir necesita una ruta."; OUT_DIR="$2"; shift 2 ;;
     --fade)      [[ $# -ge 2 ]] || die "--fade necesita un valor en milisegundos."; FADE="$2"; shift 2 ;;
@@ -130,6 +141,42 @@ fi
 [[ "$BPM" =~ ^[0-9]+([.][0-9]+)?$ ]] && awk -v b="$BPM" 'BEGIN{exit !(b>0)}' \
   || die "El BPM debe ser un número mayor a 0 (ej: 110). Recibido: '$BPM'"
 
+# --- Inicio: moverlo al tiempo (beat) más cercano ---------------------------
+# Para que el loop arranque EN PULSO y no a mitad de tiempo (que es lo que suena
+# "tropezado" al repetir). NO se modifica el audio: solo cambia el punto de corte.
+START_PEDIDO="$START"
+CORRECCION_MS=""
+if [[ $CUANTIZAR == 1 ]]; then
+  BEATS_JSON=""
+  if [[ -n "$CANCION" ]]; then
+    BEATS_JSON="$(raiz_salida "$CANCION")/analisis/${CANCION}_tempo.json"
+  fi
+  if ! command -v python3 >/dev/null 2>&1; then
+    aviso "No encontré 'python3': corto exacto en $START s (sin ajustar al tiempo más cercano)."
+  elif [[ -z "$BEATS_JSON" || ! -f "$BEATS_JSON" ]]; then
+    aviso "No tengo los tiempos de beat de la canción, así que corto exacto en $START s.
+    Para ajustarlo a la grilla: ./scripts/analizar.sh \"<cancion>.mp3\""
+  elif RES_BEATS="$(python3 "$SCRIPT_DIR/_beats.py" "$BEATS_JSON" "$(num "$START")" 2>/dev/null)"; then
+    leer_beats() { printf '%s\n' "$RES_BEATS" | sed -n "s/^$1 //p"; }
+    if [[ "$(leer_beats hay_beats)" != "si" ]]; then
+      aviso "El análisis no tiene tiempos de beat: corto exacto en $START s."
+    elif [[ "$(leer_beats ajustar)" == "si" ]]; then
+      BEAT="$(leer_beats beat_mas_cercano)"
+      DESF="$(leer_beats desfasaje_ms)"
+      # si ya está sobre el tiempo (menos de 5 ms) no vale la pena avisar
+      if awk -v d="$DESF" 'BEGIN{exit !(d < -5 || d > 5)}'; then
+        START="$BEAT"
+        CORRECCION_MS="$DESF"
+      fi
+    else
+      aviso "No ajusté el inicio a la grilla: $(leer_beats motivo).
+    Corto exacto en $START s."
+    fi
+  else
+    aviso "No pude leer ${BEATS_JSON#"$ROOT_DIR"/}: corto exacto en $START s."
+  fi
+fi
+
 # --- Cálculo exacto de la duración -----------------------------------------
 TIEMPO=$(awk -v b="$BPM" 'BEGIN{printf "%.6f", 60/b}')
 COMPAS=$(awk -v t="$TIEMPO" 'BEGIN{printf "%.6f", 4*t}')
@@ -165,7 +212,11 @@ else
 fi
 detalle "            1 tiempo = $TIEMPO s  →  1 compás (4/4) = $COMPAS s"
 detalle "Loop      : $COMPASES compases = $DUR s  ($MUESTRAS muestras a 44.1 kHz)"
-detalle "Desde     : $START s  hasta $FIN s"
+if [[ -n "$CORRECCION_MS" ]]; then
+  detalle "Desde     : $START s  hasta $FIN s   ← ajustado a la grilla desde $START_PEDIDO s ($CORRECCION_MS ms)"
+else
+  detalle "Desde     : $START s  hasta $FIN s"
+fi
 detalle "Salida    : ${DESTINO#"$ROOT_DIR"/}"
 
 mkdir -p "$DIR_SALIDA"
