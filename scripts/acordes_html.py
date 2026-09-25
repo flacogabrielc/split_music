@@ -27,12 +27,14 @@ CALIDADES = {
     "7": [0, 4, 7, 10], "maj7": [0, 4, 7, 11], "m7": [0, 3, 7, 10],
     "6": [0, 4, 7, 9], "m6": [0, 3, 7, 9], "dim": [0, 3, 6], "aug": [0, 4, 8],
     "sus4": [0, 5, 7], "sus2": [0, 2, 7], "9": [0, 4, 7, 10, 14], "add9": [0, 4, 7, 14],
+    "m7b5": [0, 3, 6, 10], "dim7": [0, 3, 6, 9],
 }
 
 CALIDAD_TEXTO = {
     "": "mayor", "m": "menor", "7": "séptima (dominante)", "maj7": "séptima mayor",
     "m7": "menor séptima", "6": "sexta", "m6": "menor sexta", "5": "quinta (power chord)",
     "dim": "disminuido", "aug": "aumentado", "sus4": "suspendido 4", "sus2": "suspendido 2",
+    "m7b5": "semi-disminuido", "dim7": "disminuido 7",
 }
 
 # --- Digitaciones conocidas (cuerda 6ª grave -> 1ª aguda; "x" = no se toca) --
@@ -53,6 +55,21 @@ DIGITACIONES = {
     "Fm": [1, 3, 3, 1, 1, 1], "F/A": ["x", 0, 3, 2, 1, 1],
     "G": [3, 2, 0, 0, 0, 3], "G7": [3, 2, 0, 0, 0, 1], "Gmaj7": [3, "x", 0, 0, 0, 2],
     "Gm": [3, 5, 5, 3, 3, 3], "G/B": ["x", 2, 0, 0, 0, 3], "Gsus4": [3, 3, 0, 0, 1, 3],
+
+    # --- Agregadas el 24/Sep: completan las familias que estaban incompletas ---
+    # (el F6 salía 8 veces en "Down by the Seaside" y no tenía diagrama)
+    "Bm7": ["x", 2, 4, 2, 3, 2], "Cm7": ["x", 3, 5, 3, 4, 3],
+    "Fm7": [1, 3, 1, 1, 1, 1], "Gm7": [3, 5, 3, 3, 3, 3],
+    "Bmaj7": ["x", 2, 4, 3, 4, 2], "Emaj7": [0, 2, 1, 1, 0, 0],
+    "C6": ["x", 3, 2, 2, 1, 0], "E6": [0, 2, 2, 1, 2, 0],
+    "F6": [1, 3, 0, 2, 1, 1], "G6": [3, 2, 0, 0, 0, 0],
+    "Bsus4": ["x", 2, 4, 4, 5, 2], "Csus4": ["x", 3, 3, 0, 1, 1], "Fsus4": [1, 3, 3, 3, 1, 1],
+    "B5": ["x", 2, 4, 4, "x", "x"], "C5": ["x", 3, 5, 5, "x", "x"], "D5": ["x", "x", 0, 2, 3, "x"],
+    "E5": [0, 2, 2, "x", "x", "x"], "F5": [1, 3, 3, "x", "x", "x"], "G5": [3, 5, 5, "x", "x", "x"],
+    "F#7": [2, 4, 2, 3, 2, 2], "F#aug": ["x", "x", 4, 3, 3, 2],
+    "D7/F#": [2, "x", 0, 2, 1, 2],
+    "G#": [4, 6, 6, 5, 4, 4], "G#m": [4, 6, 6, 4, 4, 4],
+    "F#m7b5": [2, "x", 2, 2, 1, "x"],
 }
 
 
@@ -108,9 +125,25 @@ def etiqueta_calidad(calidad):
     return calidad or "mayor"
 
 
+def buscar_digitacion(simbolo):
+    """Devuelve la digitación de <simbolo>, probando también su equivalente enarmónico.
+
+    La tabla está escrita con sostenidos, pero Chordino devuelve bemoles (Ab, Bb, Gb...):
+    sin esto, un acorde como 'Ab' nunca encontraría diagrama (Ab = G#).
+    """
+    if simbolo in DIGITACIONES:
+        return DIGITACIONES[simbolo]
+    info = parsear_acorde(simbolo)
+    if info is None:
+        return None
+    raiz, calidad, bajo = info
+    normalizado = f"{raiz}{calidad}" + (f"/{bajo}" if bajo else "")
+    return DIGITACIONES.get(normalizado)
+
+
 def svg_diagrama(simbolo, ancho=118, alto=146):
     """Dibuja el diagrama del acorde en SVG. Devuelve None si no hay digitación."""
-    dig = DIGITACIONES.get(simbolo)
+    dig = buscar_digitacion(simbolo)
     if dig is None:
         return None
 

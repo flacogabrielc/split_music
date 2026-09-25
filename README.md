@@ -428,7 +428,9 @@ sistema, y al terminar `separar.sh` te avisa si detectó ese warning.
 - **Informe HTML de acordes** (`acordes_html.py`): se genera con **Python puro** (sin librerías
   externas ni CDN). Los diagramas son **SVG dibujados por código** y el HTML es **autocontenido**,
   así que se abre sin internet y se puede imprimir a PDF directamente. Las digitaciones salen de una
-  tabla interna para afinación estándar (EADGBE); si un acorde no está en la tabla, la tarjeta
+  tabla interna para afinación estándar (EADGBE) con **69 voicings**; si el acorde viene con bemoles
+  (`Ab`, `Gb`) se resuelve por **equivalente enarmónico** (`G#`, `F#`), porque Chordino los entrega
+  con bemol y la tabla está escrita con sostenido. Si un acorde no está en la tabla, la tarjeta
   muestra el nombre y las notas que lo componen. El informe incluye resumen, grilla de diagramas,
   **línea de tiempo proporcional** (cada acorde con el ancho de su duración real), tabla de cambios
   y un pie que explica el significado de `N`.

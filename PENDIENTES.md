@@ -29,11 +29,19 @@
   **(c)** en stems de batería+bajo la **tonalidad sale mal** (el croma se sesga hacia el bajo):
   analizar el **tema completo**; **(d)** songbpm/Spotify puede errar la tonalidad (decía E mayor
   para *Boogie with Stu*, que en realidad es A). Flags nuevos: `--sin-tempo`, `--tempo-rapido`.
+- **Digitaciones de acordes ampliadas** — 24/Sep: la tabla de `acordes_html.py` pasó de **44 a 69**
+  voicings, y se agregó **resolución de equivalentes enarmónicos**: el diccionario está escrito con
+  sostenidos pero Chordino devuelve bemoles, así que `Ab` (= `G#`) **nunca** encontraba diagrama.
+  También se agregaron las calidades **m7b5** y **dim7** a `CALIDADES` (antes caían al fallback de
+  tríada mayor y describían mal las notas).
+  **Validado con un verificador** que deriva las notas de cada cifrado pisado y las compara con la
+  fórmula del acorde: **69/69 correctas, 0 errores**. Cobertura sobre los análisis existentes:
+  de 19 apariciones sin diagrama a **3** (**98.7 %**).
 - **Canciones procesadas**:
   - `Down by the Seaside`: 4 stems (htdemucs) + 6 stems (htdemucs_6s) + loop + mezclas + análisis (84 segmentos)
   - `Boogie with Stu`: 6 stems (htdemucs_6s) + análisis por stem (6) + análisis de la mezcla (43 segmentos)
-- **Docs**: `.clinerules` (110 líneas), `AGENTES.md` (420), `README.md` (495),
-  `PENDIENTES.md` (115) + backups `.bak_pre_spleeter` de los 3
+- **Docs**: `.clinerules` (117 líneas), `AGENTES.md` (436), `README.md` (516),
+  `PENDIENTES.md` (140) + backups `.bak_pre_spleeter` de los 3
   (versión anterior al cambio de estructura).
 - **Repo en GitHub** (24/Sep): `https://github.com/flacogabrielc/split_music` — **público**, rama `main`.
   21 archivos / 492 KB (scripts + docs). `venv/`, `mp3/`, `output/` y `separated/` quedaron en `.gitignore`.
@@ -50,25 +58,24 @@
    lea `output/<cancion>/analisis/<cancion>_tempo.txt` y use el detectado, avisando que fue automático.
    Ojo: para un loop conviene redondear el BPM y revisar el `--start` (el error de 0.5% en 4 minutos
    acumula ~1 s de corrimiento).
-2. **Más digitaciones** en la tabla de `acordes_html.py` (hay **44**): falta **`F6`** y voicings
-   alternativos. Dato real: `F6` aparece **8 veces** en `Down by the Seaside` y hoy sale sin diagrama.
-3. **Mejoras del HTML** charladas: filtro por instrumento, comparar stems lado a lado, barras por compás.
-4. **Decisión abierta**: los derivados van a `output/<cancion>/<modelo>/` (actual) —
+2. **Mejoras del HTML** charladas: filtro por instrumento, comparar stems lado a lado, barras por
+   compás. (Las métricas de BPM/tonalidad y las digitaciones ya se agregaron el 24/Sep.)
+3. **Decisión abierta**: los derivados van a `output/<cancion>/<modelo>/` (actual) —
    ¿o preferís `output/<cancion>/mezclas/`?
-5. **Limpieza opcional**: `rm -rf output/prueba_30s` (artefacto de mis pruebas) y
+4. **Limpieza opcional**: `rm -rf output/prueba_30s` (artefacto de mis pruebas) y
    los `test_*.wav` / `prueba_30s_*.wav` de la raíz de `output/` (tuyos, para borrar vos).
-6. **`Readme.txt` reapareció** (24/Sep 01:27, 102 líneas): es tu nota **original**, con los
+5. **`Readme.txt` reapareció** (24/Sep 01:27, 102 líneas): es tu nota **original**, con los
    `--stems` que corregimos. Probablemente el editor la tenía abierta y la guardó después del
    renombre. Hoy conviven:
    - `Readme.txt` → versión vieja (con los `--stems` inexistentes)
    - `COMANDOS_MANUALES.txt` → versión corregida
    Decidí: borrar el viejo, fusionar, o dejarlo como histórico. **No lo toqué** (es tuyo).
-7. **`separated/`** existe de nuevo pero **vacía**: la recrea `procesar.sh` con `mkdir -p`
+6. **`separated/`** existe de nuevo pero **vacía**: la recrea `procesar.sh` con `mkdir -p`
    (es el staging documentado de Demucs). No molesta; si querés se elimina esa línea.
-8. **Descripción del repo en GitHub** (opcional, 30 s en la web): el tagline
+7. **Descripción del repo en GitHub** (opcional, 30 s en la web): el tagline
    *"Un separador de pistas y creador de partituras y acordes"* quedó solo en el commit inicial
    `ad87b8d`; el `README.md` actual arranca distinto. Se puede pegar en *Settings → Description*.
-9. **Analista: estructura del tema** (intro / verso / estribillo) — es lo que le queda al rol después
+8. **Analista: estructura del tema** (intro / verso / estribillo) — es lo que le queda al rol después
    de BPM y tonalidad. Se haría con `librosa.segment` (auto-similitud) sobre el croma ya calculado.
 
 ## 🔗 Repositorio (GitHub)
