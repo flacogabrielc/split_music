@@ -6,6 +6,8 @@ source "$(dirname "$(readlink -f "$0")")/_comun.sh"
 FORZAR=0
 STEMS=0
 HTML=1
+TEMPO=1
+TEMPO_RAPIDO=0
 SALIDA=""
 OUT_DIR=""
 POSICIONALES=()
@@ -14,24 +16,27 @@ uso() {
   cat <<EOF
 Uso: ./scripts/analizar.sh <archivo_audio|carpeta_stems> [--stems] [--out <nombre>] [--out-dir <ruta>]
 
-Extrae la secuencia de acordes con timestamps usando chord-extractor (plugin Chordino)
-y escribe TRES archivos por análisis:
-  <salida>.txt   -> "timestamp_segundos acorde" (una línea por segmento)
-  <salida>.json  -> los mismos datos + metadatos (herramienta, fecha, total)
-  <salida>.html  -> informe para abrir en el navegador: diagramas de acorde dibujados
-                    en SVG, línea de tiempo y tabla de cambios (autocontenido, sin internet)
+Extrae los ACORDES con timestamps (chord-extractor / Chordino) y, además, el BPM y la
+TONALIDAD (librosa). Archivos por análisis:
+  <nombre>_acordes.txt   -> "timestamp_segundos acorde" (una línea por segmento)
+  <nombre>_acordes.json  -> los mismos datos + metadatos (herramienta, fecha, total)
+  <nombre>_acordes.html  -> informe para el navegador: diagramas de acorde en SVG, línea
+                            de tiempo, tabla de cambios y las métricas de BPM/tonalidad
+  <nombre>_tempo.txt     -> resumen "<clave> <valor>": bpm, beats, tonalidad, confianza
+  <nombre>_tempo.json    -> lo mismo + candidatos de tonalidad y los tiempos de beat
 
 Destino por defecto:
-  output/<cancion>/analisis/<nombre>_acordes.{txt,json}
-  (si no se puede deducir la canción: output/_sueltos/analisis/)
+  output/<cancion>/analisis/  (si no se puede deducir la canción: output/_sueltos/analisis/)
 
 Argumentos:
   <archivo_audio>   Archivo de audio (ruta, relativa a la raíz, o nombre suelto en mp3/)
-  <carpeta_stems>   Con --stems: carpeta de stems (ej: separated/htdemucs/Cancion)
+  <carpeta_stems>   Con --stems: carpeta de stems (ej: output/<cancion>/spleeter/htdemucs)
 
 Opciones:
   --stems           Analiza CADA stem .wav de la carpeta por separado
   --sin-html        No genera el informe .html (solo .txt y .json)
+  --sin-tempo       No calcula BPM ni tonalidad (solo acordes)
+  --tempo-rapido    Calcula el BPM sin el refinamiento por peine (más rápido)
   --out <nombre>    Nombre base de salida (sin .txt/.json). Default: <archivo> o <stem>
   --out-dir <ruta>  Carpeta de destino explícita (relativa a la raíz o absoluta)
   -f, --forzar      Sobrescribe resultados existentes sin preguntar
@@ -39,8 +44,8 @@ Opciones:
 
 Ejemplos:
   ./scripts/analizar.sh "Down by the Seaside.mp3"
-  ./scripts/analizar.sh "separated/htdemucs/Down by the Seaside/bass.wav" --out acordes_bajo
-  ./scripts/analizar.sh "separated/htdemucs/Down by the Seaside" --stems
+  ./scripts/analizar.sh "output/Boogie with Stu/spleeter/htdemucs_6s/bass.wav" --out acordes_bajo
+  ./scripts/analizar.sh "output/Boogie with Stu/spleeter/htdemucs_6s" --stems
 EOF
 }
 
@@ -50,6 +55,8 @@ while [[ $# -gt 0 ]]; do
     -f|--forzar) FORZAR=1; shift ;;
     --stems)     STEMS=1; shift ;;
     --sin-html)  HTML=0; shift ;;
+    --sin-tempo) TEMPO=0; shift ;;
+    --tempo-rapido) TEMPO_RAPIDO=1; shift ;;
     --out)       [[ $# -ge 2 ]] || die "--out necesita un nombre."; SALIDA="$2"; shift 2 ;;
     --out-dir)   [[ $# -ge 2 ]] || die "--out-dir necesita una ruta."; OUT_DIR="$2"; shift 2 ;;
     -*)          uso >&2; die "Opción desconocida: $1" ;;
@@ -79,7 +86,26 @@ if ! "$PY" -c 'import chord_extractor' >/dev/null 2>&1; then
     Instalalo con:
       ./$VENV_NOMBRE/bin/pip install --ignore-requires-python --no-build-isolation chord-extractor"
 fi
-info "venv en uso: $VENV_NOMBRE  |  herramienta: chord-extractor (Chordino)"
+
+# librosa (BPM y tonalidad) es opcional: si falta, se degrada con un aviso en vez de fallar.
+if [[ $TEMPO == 1 ]]; then
+  if [[ ! -f "$SCRIPT_DIR/analizar_bpm.py" ]]; then
+    aviso "Falta '$SCRIPT_DIR/analizar_bpm.py': no se calculará BPM ni tonalidad."
+    TEMPO=0
+  elif ! "$PY" -c 'import librosa' >/dev/null 2>&1; then
+    aviso "librosa no está instalado en el venv '$VENV_NOMBRE': no se calculará BPM ni tonalidad.
+    Instalalo con:
+      ./$VENV_NOMBRE/bin/pip install -r requirements.txt
+    (o usá --sin-tempo para saltearlo)"
+    TEMPO=0
+  fi
+fi
+
+HERRAMIENTAS="chord-extractor (Chordino)"
+if [[ $TEMPO == 1 ]]; then
+  HERRAMIENTAS="$HERRAMIENTAS + librosa (BPM y tonalidad)"
+fi
+info "venv en uso: $VENV_NOMBRE  |  herramientas: $HERRAMIENTAS"
 
 # --- Resolver entrada y armar la lista de audios ----------------------------
 if [[ $STEMS == 1 ]]; then
@@ -117,7 +143,7 @@ else
 fi
 mkdir -p "$DIR_SALIDA"
 
-cabecera "ANÁLISIS DE ACORDES (chord-extractor / Chordino)"
+cabecera "ANÁLISIS MUSICAL (acordes + BPM + tonalidad)"
 if [[ $STEMS == 1 ]]; then
   detalle "Entrada   : ${REF#"$ROOT_DIR"/}  (${#LISTA[@]} stems)"
   detalle "Modo      : --stems (uno por uno)"
@@ -156,6 +182,25 @@ for AUDIO in "${LISTA[@]}"; do
   ANALIZADOS=$((ANALIZADOS + 1))
   ULTIMO_TXT="$RUTA_BASE.txt"
 
+  # --- BPM y tonalidad (librosa) ---------------------------------------------
+  # Chordino no informa tempo ni tonalidad, así que van en archivos aparte:
+  #   <nombre>_tempo.txt / <nombre>_tempo.json
+  BPM_VAL=""; TON_CORTA=""; TON_LARGA=""; RUTA_TEMPO=""
+  OPTS_TEMPO=()
+  if [[ $TEMPO == 1 ]]; then
+    RUTA_TEMPO="${RUTA_BASE%_acordes}_tempo"
+    if [[ $TEMPO_RAPIDO == 1 ]]; then OPTS_TEMPO=(--sin-refinar); fi
+    if RES_TEMPO="$("$PY" "$SCRIPT_DIR/analizar_bpm.py" "$AUDIO" --out "$RUTA_TEMPO" \
+                     "${OPTS_TEMPO[@]}" 2>/dev/null)"; then
+      BPM_VAL="$(printf '%s\n' "$RES_TEMPO" | sed -n 's/^BPM: //p')"
+      TON_CORTA="$(printf '%s\n' "$RES_TEMPO" | sed -n 's/^TONALIDAD_COMPACTA: //p')"
+      TON_LARGA="$(printf '%s\n' "$RES_TEMPO" | sed -n 's/^TONALIDAD: //p')"
+    else
+      aviso "No se pudo detectar el BPM/tonalidad de '$ESTEM' (los acordes quedaron bien)"
+      RUTA_TEMPO=""
+    fi
+  fi
+
   # --- Informe HTML autocontenido (diagramas de acorde en SVG) --------------
   ARCHIVOS=".txt + .json"
   if [[ $HTML == 1 ]]; then
@@ -164,9 +209,12 @@ for AUDIO in "${LISTA[@]}"; do
     else
       SUBT_HTML="canción completa · ${CANCION:-$ESTEM}"
     fi
+    OPTS_HTML=()
+    if [[ -n "$BPM_VAL" ]]; then OPTS_HTML+=(--bpm "$BPM_VAL"); fi
+    if [[ -n "$TON_LARGA" ]]; then OPTS_HTML+=(--tonalidad "$TON_LARGA"); fi
     if "$PY" "$SCRIPT_DIR/acordes_html.py" "$RUTA_BASE.txt" --out "$RUTA_BASE.html" \
          --titulo "${CANCION:-$ESTEM}" --subtitulo "$SUBT_HTML" \
-         --duracion "$(duracion_audio "$AUDIO")" >/dev/null 2>&1; then
+         --duracion "$(duracion_audio "$AUDIO")" "${OPTS_HTML[@]}" >/dev/null 2>&1; then
       ARCHIVOS=".txt + .json + .html"
     else
       aviso "No se pudo generar el informe HTML de '$ESTEM' (el .txt y el .json quedaron bien)"
@@ -174,8 +222,11 @@ for AUDIO in "${LISTA[@]}"; do
   fi
 
   ok "'$ESTEM': $SEGS segmentos -> ${RUTA_BASE#"$ROOT_DIR"/}$ARCHIVOS"
+  if [[ -n "$BPM_VAL" ]]; then
+    msg "     tempo: $BPM_VAL BPM  ·  tonalidad: $TON_LARGA  (${RUTA_TEMPO#"$ROOT_DIR"/}.txt/.json)"
+  fi
   msg "     primeros acordes: $(printf '%s' "$SEQ" | awk '{for(i=1;i<=10&&i<=NF;i++) printf "%s ", $i}')"
-  RESUMEN+=("$ESTEM|$SEGS|${RUTA_BASE#"$ROOT_DIR"/}")
+  RESUMEN+=("$ESTEM|$SEGS|${RUTA_BASE#"$ROOT_DIR"/}|$BPM_VAL|$TON_CORTA")
 done
 
 # --- Primeros acordes del archivo completo (formato tabla) ------------------
@@ -188,16 +239,17 @@ fi
 
 # --- Resumen ----------------------------------------------------------------
 paso "Resumen"
-printf '   %-26s %9s  %s\n' "ARCHIVO" "SEGMENTOS" "SALIDA"
+printf '   %-24s %9s %7s  %-11s %s\n' "ARCHIVO" "SEGMENTOS" "BPM" "TONALIDAD" "SALIDA"
 for fila in "${RESUMEN[@]}"; do
-  IFS='|' read -r n s r <<< "$fila"
-  printf '   %-26s %9s  %s.txt\n' "$n" "$s" "$r"
+  IFS='|' read -r n s r b t <<< "$fila"
+  printf '   %-24s %9s %7s  %-11s %s.txt\n' "$n" "$s" "${b:--}" "${t:--}" "$r"
 done
 msg ""
-detalle "Formato del .txt: <timestamp_segundos> <acorde>   (ej: 0.464 C)"
+detalle "Formato del .txt de acordes: <timestamp_segundos> <acorde>   (ej: 0.464 C)"
+detalle "Formato del .txt de tempo:   <clave> <valor>   (ej: bpm 91.85)"
 
 if [[ $ANALIZADOS -eq 0 ]]; then
   die "No se generó ningún análisis (fallos: $FALLOS)."
 fi
 [[ $FALLOS -gt 0 ]] && aviso "$FALLOS análisis fallaron. Ver los mensajes de arriba."
-ok "Listo: $ANALIZADOS análisis en ${DIR_SALIDA#"$ROOT_DIR"/} (herramienta: chord-extractor / Chordino)"
+ok "Listo: $ANALIZADOS análisis en ${DIR_SALIDA#"$ROOT_DIR"/} (herramientas: $HERRAMIENTAS)"

@@ -253,7 +253,7 @@ PALETA = ["#f0b429", "#4ade80", "#60a5fa", "#f472b6", "#a78bfa", "#f87171",
           "#34d399", "#fbbf24", "#38bdf8", "#c084fc", "#fb923c", "#2dd4bf"]
 
 
-def generar_html(titulo, subtitulo, meta, acordes, duracion):
+def generar_html(titulo, subtitulo, meta, acordes, duracion, bpm=None, tonalidad=""):
     """Arma el documento HTML completo (autocontenido, sin recursos externos)."""
     total = len(acordes)
     conteo = Counter(a for _, a in acordes)
@@ -267,6 +267,15 @@ def generar_html(titulo, subtitulo, meta, acordes, duracion):
 
     chips = "".join(f'<span class="chip">{html.escape(k)}: <b>{html.escape(str(v))}</b></span>'
                     for k, v in meta.items())
+
+    # Métricas extra del análisis de tempo/tonalidad (librosa), si vinieron de analizar.sh
+    extras = ""
+    if bpm:
+        extras += (f'<div class="metrica"><div class="valor">{bpm:g}</div>'
+                   f'<div class="etiqueta">BPM</div></div>')
+    if tonalidad:
+        extras += (f'<div class="metrica"><div class="valor">{html.escape(tonalidad)}</div>'
+                   f'<div class="etiqueta">tonalidad</div></div>')
 
     # Segmentos con duración real (cada acorde dura hasta el siguiente)
     segmentos = []
@@ -309,7 +318,7 @@ def generar_html(titulo, subtitulo, meta, acordes, duracion):
     <div class="metrica"><div class="valor">{len(unicos)}</div><div class="etiqueta">acordes distintos</div></div>
     <div class="metrica"><div class="valor">{dur_total:.1f}s</div><div class="etiqueta">duración analizada</div></div>
     <div class="metrica"><div class="valor">{dur_total / 60:.2f}</div><div class="etiqueta">minutos</div></div>
-  </div>
+{extras}  </div>
 
   <h2>Diagramas de acorde</h2>
   <div class="grilla">
@@ -383,6 +392,10 @@ def main():
     p.add_argument("--titulo", help="título del informe (default: nombre del archivo)")
     p.add_argument("--subtitulo", default="", help="subtítulo (ej: 'stem guitarra · htdemucs_6s')")
     p.add_argument("--duracion", type=float, default=0.0, help="duración del audio en segundos")
+    p.add_argument("--bpm", type=float, default=0.0,
+                   help="BPM detectado (opcional: se muestra como métrica)")
+    p.add_argument("--tonalidad", default="",
+                   help="tonalidad detectada (opcional: se muestra como métrica)")
     args = p.parse_args()
 
     if not os.path.isfile(args.txt):
@@ -403,7 +416,7 @@ def main():
     meta["segmentos"] = len(acordes)
     meta["distintos"] = len(set(a for _, a in acordes))
 
-    doc = generar_html(titulo, args.subtitulo, meta, acordes, args.duracion)
+    doc = generar_html(titulo, args.subtitulo, meta, acordes, args.duracion, args.bpm, args.tonalidad)
 
     carpeta = os.path.dirname(args.out)
     if carpeta:

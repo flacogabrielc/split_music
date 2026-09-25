@@ -30,8 +30,9 @@ loops para practicar guitarra o armar remixes. Todo el procesamiento es **local*
 │   ├── limpiar.sh
 │   ├── loop.sh
 │   ├── procesar.sh
-│   ├── analizar.sh   # rol Analista (acordes)
+│   ├── analizar.sh   # rol Analista (acordes + BPM + tonalidad)
 │   ├── analizar.py   # wrapper de chord-extractor que usa analizar.sh
+│   ├── analizar_bpm.py  # BPM y tonalidad con librosa (lo usa analizar.sh)
 │   └── acordes_html.py  # genera el informe HTML con diagramas SVG
 ├── .clinerules             # reglas del proyecto para Cline (rutas, roles, confirmaciones)
 ├── AGENTES.md              # roles de trabajo para pedir tareas en lenguaje natural
@@ -234,24 +235,29 @@ Demucs) salvo que uses `--re-separar`.
 ./scripts/procesar.sh tema.mp3 htdemucs_6s --bpm 128 --compases 16
 ```
 
-### `analizar.sh` — acordes con timestamps (rol Analista)
+### `analizar.sh` — acordes, BPM y tonalidad (rol Analista)
 
 ```bash
-./scripts/analizar.sh <archivo_audio|carpeta_stems> [--stems] [--out <nombre>] [--out-dir <ruta>]
+./scripts/analizar.sh <archivo_audio|carpeta_stems> [--stems] [--sin-tempo] [--out <nombre>] [--out-dir <ruta>]
 ```
 
-Extrae la **secuencia de acordes** y escribe **tres archivos**:
+Extrae la **secuencia de acordes** (Chordino) y el **BPM + la tonalidad** (librosa), y escribe
+**cinco archivos**:
 
 | Archivo | Contenido |
 |---|---|
 | `<nombre>_acordes.txt` | `timestamp_segundos acorde`, una línea por segmento (ej: `1.022 F`) |
 | `<nombre>_acordes.json` | los mismos datos + metadatos (herramienta, fecha, total de segmentos) |
-| `<nombre>_acordes.html` | informe para el navegador: **diagramas de acorde en SVG**, línea de tiempo proporcional y tabla de cambios (autocontenido, sin internet) |
+| `<nombre>_acordes.html` | informe para el navegador: **diagramas de acorde en SVG**, línea de tiempo proporcional, tabla de cambios y las **métricas de BPM/tonalidad** (autocontenido, sin internet) |
+| `<nombre>_tempo.txt` | resumen `<clave> <valor>`: `bpm`, `bpm_refinado`, `beats`, `tonalidad`, `confianza`, `ambigua` |
+| `<nombre>_tempo.json` | lo mismo + los **5 candidatos de tonalidad** con su puntaje, el croma por nota y **todos los tiempos de beat** (útil para el Looper) |
 
 | Opción | Para qué |
 |---|---|
 | `--stems` | Analiza **cada stem** `.wav` de la carpeta por separado |
 | `--sin-html` | No genera el `.html` (solo `.txt` y `.json`) |
+| `--sin-tempo` | No calcula BPM ni tonalidad (solo acordes) |
+| `--tempo-rapido` | Calcula el BPM sin el refinamiento por peine (más rápido, menos preciso) |
 | `--out <nombre>` | Nombre base de salida (se le agrega `_acordes`) |
 | `--out-dir <ruta>` | Fuerza la carpeta de destino |
 | `-f, --forzar` | Sobrescribe sin preguntar |
@@ -270,9 +276,24 @@ la canción). Acepta el **nombre suelto** del archivo (lo busca en `mp3/` y subc
 ./scripts/analizar.sh "output/Boogie with Stu/spleeter/htdemucs_6s" --stems
 ```
 
-Herramienta: **chord-extractor 0.1.3** con el plugin **Chordino** (`nnls-chroma`), instalado en
-`venv/`. `N` en la salida significa "sin acorde detectado" (silencio/percusión). **No** detecta
-BPM ni tonalidad (ver *Pendientes* en `AGENTES.md`).
+Herramientas: **chord-extractor 0.1.3** (plugin **Chordino** `nnls-chroma`) para los acordes y
+**librosa** para el **BPM y la tonalidad**, ambas instaladas en `venv/`. `N` en la salida significa
+"sin acorde detectado" (silencio/percusión).
+
+**Precisión del BPM y la tonalidad** (medido contra [songbpm.com](https://songbpm.com) y la
+secuencia de acordes de cada tema):
+
+| Canción | BPM detectado | BPM real | Tonalidad detectada | Tonalidad real |
+|---|---|---|---|---|
+| Down by the Seaside | 91.85 | 92 | C mayor | C mayor ✅ |
+| Boogie with Stu | 132.11 | 133 | A mayor | A mayor ✅ |
+
+- El **BPM** se calcula con `beat_track` y se **refina con una búsqueda de peine** sobre todo el
+  audio (`--tempo-rapido` lo saltea). Error típico observado: **< 1 %**.
+- La **tonalidad** sale de correlacionar el croma con los 24 perfiles de **Krumhansl-Kessler**.
+  Es **orientativa**: `_tempo.txt` trae `confianza` y `ambigua`, y el `.json` los 5 candidatos.
+- ⚠️ **Analizá el tema completo**: en stems de batería+bajo el croma se sesga hacia el bajo y la
+  tonalidad sale mal (en un stem rítmico los acordes tampoco tienen sentido musical).
 
 ---
 

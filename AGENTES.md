@@ -37,7 +37,7 @@ Resumen de dónde vive cada cosa (así se puede pedir un archivo **sin escribir 
 | 2 | **Mezclador** | Combina pistas y ajusta sus volúmenes relativos | `scripts/mezclar.sh` | `output/<cancion>/<modelo>/<nombre>.wav` |
 | 3 | **Masterizador** | Filtra frecuencias para limpiar/oscurecer/aclarar una pista | `scripts/limpiar.sh` | `output/<cancion>/<modelo>/<nombre>.wav` (o `output/_sueltos/`) |
 | 4 | **Looper** | Extrae un loop exacto (N compases a un BPM dado) | `scripts/loop.sh` | `output/<cancion>/loops/<nombre>.wav` |
-| 5 | **Analista** | Detecta la secuencia de acordes (con timestamps) de un audio | `scripts/analizar.sh` | `output/<cancion>/analisis/<nombre>_acordes.{txt,json,html}` |
+| 5 | **Analista** | Detecta acordes (con timestamps), **BPM y tonalidad** de un audio | `scripts/analizar.sh` | `output/<cancion>/analisis/<nombre>_acordes.{txt,json,html}` + `<nombre>_tempo.{txt,json}` |
 | — | *(Maestro)* | Encadena los 4 roles de una sola vez | `scripts/procesar.sh` | `output/<cancion>/<modelo>/` + `output/<cancion>/loops/` |
 
 ---
@@ -348,18 +348,26 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
 
 # 5️⃣ Analista
 
-**Descripción:** Detecta la secuencia de acordes (con timestamps) de un audio usando chord-extractor / Chordino.
+**Descripción:** Detecta la secuencia de acordes (con timestamps) usando chord-extractor / Chordino y, además, el **BPM y la tonalidad** con librosa.
 
-**Script que usa:** `scripts/analizar.sh` (+ `scripts/analizar.py`, el wrapper de Python)
+**Script que usa:** `scripts/analizar.sh` (+ `scripts/analizar.py` para los acordes y `scripts/analizar_bpm.py` para BPM y tonalidad)
 
 **Capacidades concretas:**
 
 - Extraer la **secuencia de acordes** con su **timestamp** (el segundo exacto de cada cambio de acorde).
 - Analizar un **archivo completo** (canción o stem) o **cada stem por separado** (`--stems`).
-- Escribir **tres formatos**: `.txt` (`timestamp acorde`, una línea por segmento), `.json`
-  (los mismos datos + metadatos) y `.html` (informe para abrir en el navegador con **diagramas de
-  acorde dibujados en SVG**, línea de tiempo proporcional y tabla de cambios; autocontenido, sin
-  internet). `--sin-html` omite este último.
+- Escribir **cinco archivos**: `_acordes.txt` (`timestamp acorde`, una línea por segmento),
+  `_acordes.json` (los mismos datos + metadatos), `_acordes.html` (informe para abrir en el
+  navegador con **diagramas de acorde en SVG**, línea de tiempo proporcional, tabla de cambios y
+  las **métricas de BPM y tonalidad**; autocontenido, sin internet), `_tempo.txt` (resumen
+  `clave valor`) y `_tempo.json` (candidatos de tonalidad, croma por nota y **todos los tiempos de
+  beat**, que el Looper puede reutilizar).
+- Detectar el **BPM** con `librosa.beat.beat_track` + **refinamiento por peine** sobre todo el audio
+  (busca el tempo que mejor alinea los onsets de punta a punta), y la **tonalidad** correlacionando
+  el croma con los 24 perfiles de **Krumhansl-Kessler**. Informa `confianza`, `ambigua` y los 5
+  candidatos con su puntaje.
+- `--sin-html` omite el informe, `--sin-tempo` saltea BPM y tonalidad, y `--tempo-rapido` calcula el
+  BPM sin el refinamiento (más rápido).
 - Resolver el audio por **nombre suelto** (lo busca en `mp3/` y subcarpetas) o por ruta.
 - Destino automático: `output/<cancion>/analisis/`, con fallback a `output/_sueltos/analisis/`.
 - Reportar: herramienta usada, cantidad de segmentos, primeros acordes y rutas de salida.
@@ -375,12 +383,16 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
 **Límites (NO hace):**
 
 - ❌ No separa, no mezcla y no filtra (eso es Separador / Mezclador / Masterizador).
-- ❌ **No detecta BPM ni tonalidad** (*pendiente*): solo acordes. Si piden "el BPM de X" hay que
-  aclarar que todavía no está soportado.
+- ❌ **No detecta la estructura** del tema (intro / verso / estribillo): pendiente.
 - ❌ No transcribe melodías ni batería a MIDI.
 - ❌ No cambia el tono ni el tempo (no hace transposición ni time-stretch).
-- ⚠️ Chordino asume afinación estándar (A=440) y funciona mejor con material armónico; en stems
-  puramente rítmicos (batería) los acordes resultantes no tienen sentido musical.
+- ⚠️ El **BPM** puede confundirse con el doble o la mitad en temas de pulso ambiguo: `_tempo.txt`
+  lo avisa con `posible_octava` y trae `bpm_mitad` y `bpm_doble`.
+- ⚠️ La **tonalidad** es orientativa (heurística, no análisis armónico): en temas con poca armonía
+  sale `ambigua si`. En stems puramente rítmicos (batería) no tiene sentido.
+- ⚠️ Analizá **el tema completo** cuando te interese la tonalidad: en un stem de bajo el croma se
+  sesga hacia el bajo y la tonalidad sale mal.
+- ⚠️ Chordino asume afinación estándar (A=440) y funciona mejor con material armónico.
 - ⚠️ Devuelve `N` cuando no detecta acorde (silencio, ruido, percusión, comienzo del tema).
 
 **Comandos equivalentes:**
@@ -396,6 +408,10 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
 # Todos los stems de una canción, uno por uno
 ./scripts/analizar.sh "output/Boogie with Stu/spleeter/htdemucs_6s" --stems
 
+# Leer el BPM y la tonalidad ya calculados
+grep -E '^(bpm|bpm_refinado|tonalidad_completa|confianza|ambigua) ' \
+  "output/Down by the Seaside/analisis/Down by the Seaside_tempo.txt"
+
 # Leer los acordes ya calculados
 head -20 "output/Down by the Seaside/analisis/Down by the Seaside_acordes.txt"
 ```
@@ -409,10 +425,10 @@ head -20 "output/Down by the Seaside/analisis/Down by the Seaside_acordes.txt"
 | Masterizador | **Normalización de loudness** (LUFS) | filtro nuevo en `limpiar.sh` con `loudnorm=I=-14:TP=-1:LRA=11` o `dynaudnorm` |
 | Masterizador | **Compresión / reverb / delay / EQ** | cadenas ffmpeg: `acompressor`, `aecho`, `equalizer` |
 | Masterizador | **Rango real** en `bandpass` (ej. 200-5000) | agregar `--hasta <hz>` que combine `highpass` + `lowpass` en un solo pase |
-| Looper | **Detección automática de BPM** | nuevo script `analyze.sh` con `librosa.beat.beat_track` (ya validado en `/tmp/musica-venv`) |
+| Looper | **Detección automática de BPM** | ✅ el motor ya existe: `scripts/analizar_bpm.py` (lo usa el Analista). Falta que `loop.sh` lo consulte para usar el BPM detectado cuando no se lo pasan |
 | Looper | **Time-stretch / warp** al BPM objetivo | `atempo` (ffmpeg) o `rubberband` (mejor calidad) |
 | Looper | **Compases ≠ 4/4** | parámetro `--tiempos-por-compas` (por defecto 4) |
-| Analista | **BPM y tonalidad** (chord-extractor solo entrega acordes) + estructura (intro/verso/estribillo) | script con `librosa` (`beat_track`, `chroma_cqt`) — ya validado en `/tmp/musica-venv` |
+| Analista | **Estructura** del tema (intro/verso/estribillo) | ✅ BPM y tonalidad ya están hechos (`scripts/analizar_bpm.py`, validado: <1 % de error en BPM y tonalidad correcta en las 2 canciones de prueba). Falta la estructura: segmentación por auto-similitud (`librosa.segment`) |
 | Analista | Alternativa "todo en uno" (acordes + batería + voz a MIDI): **Omnizart** | evaluado y descartado por ahora: publica **solo sdist** (hay que compilar), arrastra **TensorFlow (~600 MB)** y libs de sistema (`vamp`, `pyfluidsynth`). Si se retoma, va en un venv aparte |
 | Nuevo rol | **Grabador**: pasar stems a MIDI (batería, bajo, melodía) | `basic-pitch` (pip) o detección de onsets + clasificación |
 

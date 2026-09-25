@@ -89,22 +89,29 @@ Nota: en Demucs 4.1.0 NO existe --stems (falla con "unrecognized arguments").
 Solo existen --two-stems=X (binario) y los flags: -n, -o, -d, --shifts, --overlap,
 --segment/--no-split, --int24, --float32, --clip-mode, --flac, --mp3, -j.
 
-## Analista (acordes)
+## Analista (acordes + BPM + tonalidad)
 
-Cuando el usuario pida acordes / progresión / "en qué acorde está" un audio:
+Cuando el usuario pida acordes / progresión / "en qué acorde está" / el BPM o la tonalidad de un audio:
 
 - "acordes de X" / "¿qué acordes tiene X?" / "la progresión de X"
     → ./scripts/analizar.sh "X.mp3"                (busca el nombre en mp3/ y subcarpetas)
+- "¿en qué BPM está X?" / "el tempo de X" / "¿en qué tonalidad está X?" / "¿en qué tono está X?"
+    → ./scripts/analizar.sh "X.mp3"                (el BPM y la tonalidad salen en el mismo pase)
+    → leer output/X/analisis/X_tempo.txt (bpm, tonalidad_completa, confianza, ambigua)
 - "acordes del bajo / de la guitarra / del piano de X"
     → ./scripts/analizar.sh "output/X/spleeter/<modelo>/<stem>.wav" --out <stem>
 - "analizá todos los stems de X" / "los acordes de cada instrumento de X"
     → ./scripts/analizar.sh "output/X/spleeter/<modelo>" --stems
 
-Salida SIEMPRE en output/<cancion>/analisis/<nombre>_acordes.txt (+ .json + .html).
+Salida SIEMPRE en output/<cancion>/analisis/:
+  <nombre>_acordes.txt (+ .json + .html)   y   <nombre>_tempo.txt (+ .json)
 Si no se puede deducir la canción: output/_sueltos/analisis/ (y se avisa).
 
-- Herramienta: chord-extractor 0.1.3 con el plugin Chordino (nnls-chroma), instalado en venv/
-  con: pip install --ignore-requires-python --no-build-isolation chord-extractor
-- El Analista NO detecta BPM ni tonalidad (pendiente): si lo piden, avisarlo.
-- Formatos de salida: .txt con "timestamp_segundos acorde" (una línea por segmento) y .json con
-  los mismos datos + metadatos. `N` significa "sin acorde detectado".
+- Herramientas: chord-extractor 0.1.3 con el plugin Chordino (nnls-chroma) para los acordes, y
+  librosa para el BPM y la tonalidad. Ambas ya están en venv/.
+- El BPM se refina por "peine" sobre todo el audio (--tempo-rapido lo saltea). La tonalidad es
+  ORIENTATIVA: siempre mirá `confianza` y `ambigua` antes de afirmarla como un hecho.
+- Para la tonalidad, analizá el TEMA COMPLETO: en stems de bajo/batería el croma se sesga y sale mal.
+- Flags: --sin-tempo (solo acordes), --sin-html, --tempo-rapido, --out, --out-dir, -f/--forzar.
+- Formatos: el .txt de acordes es "timestamp_segundos acorde" (N = sin acorde detectado); el .txt de
+  tempo es "<clave> <valor>".
