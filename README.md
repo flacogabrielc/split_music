@@ -33,7 +33,8 @@ loops para practicar guitarra o armar remixes. Todo el procesamiento es **local*
 │   ├── analizar.sh   # rol Analista (acordes + BPM + tonalidad)
 │   ├── analizar.py   # wrapper de chord-extractor que usa analizar.sh
 │   ├── analizar_bpm.py  # BPM y tonalidad con librosa (lo usa analizar.sh)
-│   └── acordes_html.py  # genera el informe HTML con diagramas SVG
+│   ├── acordes_html.py  # genera el informe HTML con diagramas SVG
+│   └── validar_digitaciones.py  # verifica que la tabla de voicings sea correcta
 ├── .clinerules             # reglas del proyecto para Cline (rutas, roles, confirmaciones)
 ├── AGENTES.md              # roles de trabajo para pedir tareas en lenguaje natural
 ├── COMANDOS_MANUALES.txt   # notas personales (comandos de demucs a mano)
@@ -431,7 +432,10 @@ sistema, y al terminar `separar.sh` te avisa si detectó ese warning.
   tabla interna para afinación estándar (EADGBE) con **69 voicings**; si el acorde viene con bemoles
   (`Ab`, `Gb`) se resuelve por **equivalente enarmónico** (`G#`, `F#`), porque Chordino los entrega
   con bemol y la tabla está escrita con sostenido. Si un acorde no está en la tabla, la tarjeta
-  muestra el nombre y las notas que lo componen. El informe incluye resumen, grilla de diagramas,
+  muestra el nombre y las notas que lo componen. La tabla se verifica con
+  `./scripts/validar_digitaciones.py`: deriva las notas de cada cifrado y las compara con la
+  fórmula del acorde (así se detectan voicings mal escritos al agregarlos). El informe incluye
+  resumen, grilla de diagramas,
   **línea de tiempo proporcional** (cada acorde con el ancho de su duración real), tabla de cambios
   y un pie que explica el significado de `N`.
 - **Logs**: cada separación deja un log en `output/logs/separar_<fecha>_<tema>.log`.

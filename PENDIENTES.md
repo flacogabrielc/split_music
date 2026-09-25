@@ -13,8 +13,9 @@
 
 - **Estructura consolidada por canción**: `output/<cancion>/{spleeter/<modelo>, <modelo>, loops, analisis}`
   (+ `output/_sueltos/` y `output/logs/`). `separated/` quedó como *staging temporal* de Demucs.
-- **Scripts** (10): `separar.sh`, `mezclar.sh`, `limpiar.sh`, `loop.sh`, `procesar.sh`,
-  `analizar.sh` + `analizar.py` + `analizar_bpm.py` + `acordes_html.py` + `_comun.sh`.
+- **Scripts** (11): `separar.sh`, `mezclar.sh`, `limpiar.sh`, `loop.sh`, `procesar.sh`,
+  `analizar.sh` + `analizar.py` + `analizar_bpm.py` + `acordes_html.py` + `_comun.sh`
+  + `validar_digitaciones.py` (verificador de la tabla de voicings).
 - **Roles documentados** en `AGENTES.md`: Separador, Mezclador, Masterizador, Looper, **Analista**.
 - **Rol Analista operativo**: chord-extractor 0.1.3 (Chordino) → `.txt` + `.json` + `.html`
   (informe con **diagramas SVG**, línea de tiempo proporcional y tabla de cambios).
@@ -35,13 +36,14 @@
   También se agregaron las calidades **m7b5** y **dim7** a `CALIDADES` (antes caían al fallback de
   tríada mayor y describían mal las notas).
   **Validado con un verificador** que deriva las notas de cada cifrado pisado y las compara con la
-  fórmula del acorde: **69/69 correctas, 0 errores**. Cobertura sobre los análisis existentes:
-  de 19 apariciones sin diagrama a **3** (**98.7 %**).
+  fórmula del acorde: **69/69 correctas, 0 errores**. Ese verificador quedó en el repo como
+  `scripts/validar_digitaciones.py` (corrélo al agregar voicings). Cobertura sobre los análisis
+  existentes: de 19 apariciones sin diagrama a **3** (**98.7 %**).
 - **Canciones procesadas**:
   - `Down by the Seaside`: 4 stems (htdemucs) + 6 stems (htdemucs_6s) + loop + mezclas + análisis (84 segmentos)
   - `Boogie with Stu`: 6 stems (htdemucs_6s) + análisis por stem (6) + análisis de la mezcla (43 segmentos)
-- **Docs**: `.clinerules` (117 líneas), `AGENTES.md` (436), `README.md` (516),
-  `PENDIENTES.md` (140) + backups `.bak_pre_spleeter` de los 3
+- **Docs**: `.clinerules` (117 líneas), `AGENTES.md` (436), `README.md` (522),
+  `PENDIENTES.md` (142) + backups `.bak_pre_spleeter` de los 3
   (versión anterior al cambio de estructura).
 - **Repo en GitHub** (24/Sep): `https://github.com/flacogabrielc/split_music` — **público**, rama `main`.
   21 archivos / 492 KB (scripts + docs). `venv/`, `mp3/`, `output/` y `separated/` quedaron en `.gitignore`.
