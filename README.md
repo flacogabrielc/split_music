@@ -17,7 +17,7 @@ loops para practicar guitarra o armar remixes. Todo el procesamiento es **local*
 
 ```
 ~/proyectos/spleeter/
-├── venv/         # entorno virtual (Demucs + torch). NO TOCAR
+├── venv/         # entorno virtual (Demucs + torch). NO TOCAR (no versionado: ver 2.1)
 ├── mp3/          # canciones de entrada (solo lectura)
 ├── separated/    # área de trabajo temporal de Demucs (el script mueve los stems a
 │                 # output/<cancion>/spleeter/<modelo>/)
@@ -36,7 +36,10 @@ loops para practicar guitarra o armar remixes. Todo el procesamiento es **local*
 ├── .clinerules             # reglas del proyecto para Cline (rutas, roles, confirmaciones)
 ├── AGENTES.md              # roles de trabajo para pedir tareas en lenguaje natural
 ├── COMANDOS_MANUALES.txt   # notas personales (comandos de demucs a mano)
+├── PENDIENTES.md           # estado actual y tareas pendientes (memoria del proyecto)
 ├── freeze_antes_chordextractor.txt  # snapshot del venv antes de instalar chord-extractor
+├── requirements.txt        # dependencias del venv (ver 2.1 para recrearlo desde cero)
+├── .gitignore              # deja fuera venv/, mp3/, output/ y separated/ (~7 GB)
 └── README.md
 ```
 
@@ -55,6 +58,33 @@ deactivate                    # para salir
 
 Verificado en esta máquina: **Python 3.12.3 · demucs 4.1.0 · torch 2.14.0+cu130**
 · CUDA disponible: **NO** → todo corre en CPU (con los 8 núcleos del equipo).
+
+### 2.1 Instalación desde cero (en otra PC)
+
+El repositorio de GitHub tiene **solo scripts y documentación** (~488 KB). `venv/`, `mp3/`,
+`output/` y `separated/` están en `.gitignore` porque pesan ~7 GB y se regeneran.
+
+```bash
+# 1) Clonar (el repo es público: leer no pide credenciales)
+git clone https://github.com/flacogabrielc/split_music.git
+cd split_music
+
+# 2) Recrear el entorno virtual (Python 3.12)
+python3 -m venv venv
+./venv/bin/pip install -r requirements.txt
+./venv/bin/pip install --ignore-requires-python --no-build-isolation chord-extractor
+
+# 3) Dependencia del sistema
+sudo apt install ffmpeg
+```
+
+- ⚠️ **`chord-extractor` va aparte**: declara `Requires-Python: >=3.8,<3.12`, así que un
+  `pip install -r requirements.txt` pelado **falla en Python 3.12**. Con `--ignore-requires-python`
+  funciona igual (el plugin Chordino y el Vamp SDK vienen empaquetados: no hace falta sudo).
+- ⚠️ El venv completo pesa **~6 GB** (torch 2.14.0 en CPU): la descarga tarda.
+  La receta también está escrita adentro de `requirements.txt`.
+- `mp3/` **no** viene en el repo (audio con copyright): copiá ahí tus canciones.
+- Para subir cambios desde esta máquina alcanza con `git push` (el remote usa **SSH**).
 
 ---
 

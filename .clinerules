@@ -5,6 +5,16 @@
 - Ese archivo es la "memoria" del proyecto (Cline no recuerda entre sesiones). Si hacemos algo
   relevante, actualizalo al terminar (marcar lo hecho y ajustar los pendientes).
 
+## Repositorio (GitHub)
+- El proyecto está versionado en https://github.com/flacogabrielc/split_music (público, rama main,
+  remote por SSH: `git@github.com:flacogabrielc/split_music.git`).
+- No se versionan (están en `.gitignore`): `venv/`, `venv-analisis/`, `mp3/`, `output/`, `separated/`.
+  ⚠️ El repo es **público**: NUNCA subir audio de `mp3/` (tiene copyright) ni stems de `output/`.
+- Antes de commitear, mostrá qué archivos entran (`git status --short`) y esperá confirmación.
+  No reescribas historial ya pusheado ni uses `git push --force` sin pedirlo explícitamente.
+- Instalación en otra máquina: clonar por HTTPS y seguir el README sección 2.1
+  (`requirements.txt`; chord-extractor necesita `--ignore-requires-python`).
+
 ## Convenciones de rutas
 - La carpeta de audio fuente es ~/proyectos/spleeter/mp3/ (o mp3/ relativo a la raíz del proyecto).
 - Cuando el usuario mencione un archivo de audio (mp3, wav, flac, ogg, m4a), asumí que está en mp3/ a menos que indique una ruta absoluta o relativa distinta.
