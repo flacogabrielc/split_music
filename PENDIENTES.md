@@ -5,7 +5,23 @@
 > *"leé `~/proyectos/spleeter/PENDIENTES.md` y seguimos"*
 > (o abrí la carpeta `~/proyectos/spleeter` como workspace, así se cargan `.clinerules` y `AGENTES.md` solos).
 
-**Última actualización:** 24/Sep/2026 — rol Analista **completo** (BPM y tonalidad) + repositorio en GitHub
+**Última actualización:** 24/Sep/2026 (madrugada) — todo **commiteado y pusheado** (`4d88ddb`)
+
+## 🎯 Para retomar mañana
+
+No hay nada a medias: **9 commits**, `main` ↔ `origin/main`, working tree limpio, 23 archivos versionados.
+Retomá con *"leé `~/proyectos/spleeter/PENDIENTES.md` y seguimos"*.
+
+**Próximo paso sugerido: el pendiente #1 (mejoras del HTML)** — de los 3 que quedan es el único de
+código puro y no depende de decisiones tuyas.
+
+**Tarea rápida aparte (2 min):** el loop viejo `output/Down by the Seaside/loops/base_loop_8c.wav` se
+generó a **110 BPM** cuando el tema es **92**, así que son **6,7 compases, no 8** (se desfasa al
+repetir). Hoy sale bien en un comando:
+```bash
+./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --start 32.5
+#   -> Tempo 92 bpm (detectado) | inicio 32.4151 s (ajustado desde 32.5, -85 ms)
+```
 
 ---
 
@@ -44,14 +60,13 @@
   - `Down by the Seaside`: 4 stems (htdemucs) + 6 stems (htdemucs_6s) + loop + mezclas + análisis (84 segmentos)
   - `Boogie with Stu`: 6 stems (htdemucs_6s) + análisis por stem (6) + análisis de la mezcla (43 segmentos)
 - **Docs**: `.clinerules` (140 líneas), `AGENTES.md` (463), `README.md` (532),
-  `PENDIENTES.md` (154) + backups `.bak_pre_spleeter` de los 3
+  `PENDIENTES.md` (173) + backups `.bak_pre_spleeter` de los 3
   (versión anterior al cambio de estructura).
 - **Repo en GitHub** (24/Sep): `https://github.com/flacogabrielc/split_music` — **público**, rama `main`.
-  21 archivos / 492 KB (scripts + docs). `venv/`, `mp3/`, `output/` y `separated/` quedaron en `.gitignore`.
-  Remote por **SSH**. El repo nació con un `Initial commit` de GitHub (README placeholder) y la
-  divergencia se resolvió con **rebase** → historial lineal, **sin `--force`**.
-  Verificado: se clona en otra PC por HTTPS **sin credenciales**. (24/Sep: quedó en **22 archivos**
-  tras borrar `Readme.txt` y sumar `analizar_bpm.py` y `validar_digitaciones.py`.)
+  **23 archivos / 576 KB** (scripts + docs) y 9 commits. `venv/`, `mp3/`, `output/` y `separated/`
+  quedaron en `.gitignore`. Remote por **SSH**. El repo nació con un `Initial commit` de GitHub
+  (README placeholder de 2 líneas) y la divergencia se resolvió con **rebase** → historial lineal,
+  **sin `--force`**. Verificado: se clona en otra PC por HTTPS **sin credenciales**.
 - **`requirements.txt`**: 72 paquetes del venv + la receta de instalación escrita adentro
   (resuelve la trampa de `Requires-Python: <3.12` de chord-extractor).
 - **Limpieza + decisiones cerradas** (24/Sep): se borraron los artefactos de prueba de `output/`
@@ -120,7 +135,10 @@ xdg-open "output/Down by the Seaside/analisis/Down by the Seaside_acordes.html"
 # mezclar / filtrar / loopear usando los stems nuevos
 ./scripts/mezclar.sh "output/Boogie with Stu/spleeter/htdemucs_6s" drums bass --out base_ritmica
 ./scripts/limpiar.sh "output/Down by the Seaside/spleeter/htdemucs/bass.wav" lowpass 220 --out bass_limpio
-./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 110 8 --start 32.5
+
+# loop: BPM detectado solo, y el inicio se ajusta al tiempo más cercano
+./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --start 32.5
+#   -> Tempo 92 bpm (detectado) | inicio 32.4151 s (ajustado desde 32.5, -85 ms)
 
 # separar una canción nueva (Demucs → staging → output/<cancion>/spleeter/)
 ./scripts/separar.sh "Boogie with Stu.mp3" htdemucs_6s
@@ -143,9 +161,10 @@ xdg-open "output/Down by the Seaside/analisis/Down by the Seaside_acordes.html"
 - Los scripts activan el venv solos; `analizar.sh` prefiere `venv-analisis/` si algún día existe.
 - Género de las canciones procesadas: *Led Zeppelin* (`mp3/`, fuente original intacta).
 - **Git**: remote por SSH a `flacogabrielc/split_music` (ver sección *Repositorio*). El repo arrancó
-  con el `Initial commit` de GitHub (README placeholder de 2 líneas) y el commit local se rebaseó
-  encima → 3 commits lineales (Initial + proyecto + docs), **sin `--force`**. `requirements.txt`
-  documenta la instalación y el repo quedó sincronizado (`main` ↔ `origin/main`).
+  con el `Initial commit` de GitHub (README placeholder de 2 líneas), rebaseado encima **sin
+  `--force`**; hoy son **9 commits lineales** (Initial + proyecto + docs + Analista + digitaciones +
+  verificador + limpieza + Looper BPM + Looper inicio). `requirements.txt` documenta la instalación y
+  el repo queda sincronizado (`main` ↔ `origin/main`).
 - ⚠️ El repo es **público**: lo que se commitea queda visible. `mp3/` y `output/` están en `.gitignore`
   justamente por el copyright del audio.
 - ⚠️ **Locale**: usá `LC_ALL=C`/`LC_NUMERIC=C` en los comandos que usen `awk` (con `es_*` los decimales
