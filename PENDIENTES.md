@@ -42,8 +42,8 @@
 - **Canciones procesadas**:
   - `Down by the Seaside`: 4 stems (htdemucs) + 6 stems (htdemucs_6s) + loop + mezclas + análisis (84 segmentos)
   - `Boogie with Stu`: 6 stems (htdemucs_6s) + análisis por stem (6) + análisis de la mezcla (43 segmentos)
-- **Docs**: `.clinerules` (117 líneas), `AGENTES.md` (436), `README.md` (497),
-  `PENDIENTES.md` (142) + backups `.bak_pre_spleeter` de los 3
+- **Docs**: `.clinerules` (135 líneas), `AGENTES.md` (451), `README.md` (516),
+  `PENDIENTES.md` (149) + backups `.bak_pre_spleeter` de los 3
   (versión anterior al cambio de estructura).
 - **Repo en GitHub** (24/Sep): `https://github.com/flacogabrielc/split_music` — **público**, rama `main`.
   21 archivos / 492 KB (scripts + docs). `venv/`, `mp3/`, `output/` y `separated/` quedaron en `.gitignore`.
@@ -64,14 +64,21 @@
   `_tempo.{txt,json}` y muestran BPM/tonalidad + los diagramas nuevos, **sin re-extraer acordes**.
   Dato real que vale anotar: en el stem de **batería** el BPM salió **66.56** (la mitad de 133.21) —
   es el caso típico de pulso ambiguo sin armonía; conviene mirar `bpm_doble` en el `_tempo.txt`.
+- **Looper: BPM automático** (24/Sep): `loop.sh` acepta ahora 2 formas de llamada
+  (`<archivo> <bpm> <compases>` y `<archivo> <compases>`) y usa el **BPM detectado** cuando no se lo
+  pasan. Lee `output/<cancion>/analisis/<cancion>_tempo.txt` — el del **mix**, no el del stem, porque
+  en un stem de batería el pulso sale a la mitad —, lo **redondea** al entero, informa el exacto y la
+  tonalidad, y **avisa sin autocorregir** si cae fuera de 75-170 bpm (caso real: 66.56 → sugiere
+  133.12). Nuevo flag `--bpm <n>` y errores claros (BPM pasado dos veces, falta de análisis, canción
+  no deducible). **7 pruebas** cubriendo compatibilidad hacia atrás, modo automático, `--bpm` y los 3
+  caminos de error.
 
 ## ⏳ Pendientes (en orden sugerido)
 
-1. **Looper: usar el BPM detectado en vez de pedirlo a mano** — el motor ya existe
-   (`scripts/analizar_bpm.py`, <1% de error). Falta que `loop.sh`, cuando **no** se le pasa `--bpm`,
-   lea `output/<cancion>/analisis/<cancion>_tempo.txt` y use el detectado, avisando que fue automático.
-   Ojo: para un loop conviene redondear el BPM y revisar el `--start` (el error de 0.5% en 4 minutos
-   acumula ~1 s de corrimiento).
+1. **Looper: ajustar el `--start` a la grilla de beats** — el BPM ya es automático, pero *dónde empieza*
+   el loop lo seguís eligiendo a ojo. Los tiempos de beat ya están guardados en
+   `<cancion>_tempo.json`: `loop.sh` podría leerlos y **proponer/cuantizar** el `--start` al tiempo
+   más cercano, para que el loop arranque en compás y no a mitad. Hoy la única forma es mirar el JSON.
 2. **Mejoras del HTML** charladas: filtro por instrumento, comparar stems lado a lado, barras por
    compás. (Las métricas de BPM/tonalidad y las digitaciones ya se agregaron el 24/Sep.)
 3. **Descripción del repo en GitHub** (opcional, 30 s en la web): el tagline

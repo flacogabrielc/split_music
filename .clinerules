@@ -115,3 +115,21 @@ Si no se puede deducir la canción: output/_sueltos/analisis/ (y se avisa).
 - Flags: --sin-tempo (solo acordes), --sin-html, --tempo-rapido, --out, --out-dir, -f/--forzar.
 - Formatos: el .txt de acordes es "timestamp_segundos acorde" (N = sin acorde detectado); el .txt de
   tempo es "<clave> <valor>".
+
+## Looper (loops exactos)
+
+Cuando el usuario pida un loop / un fragmento de N compases:
+
+- "loop de 8 compases a 110 BPM"  → ./scripts/loop.sh "<wav>" 110 8
+- "hacé un loop de 8 compases"    → ./scripts/loop.sh "<wav>" 8        (BPM detectado solo)
+- "forzá 92.5"                    → agregá --bpm 92.5
+
+Salida SIEMPRE en output/<cancion>/loops/<nombre>.wav (o output/_sueltos/loops/ y se avisa).
+Duración = (60 / BPM) * 4 * compases (asume 4/4).
+
+- El BPM automático sale de output/<cancion>/analisis/<cancion>_tempo.txt — el análisis del MIX,
+  no el del stem: en un stem de batería el pulso es ambiguo (da la mitad). Se redondea al entero.
+- Si el BPM detectado cae fuera de 75-170 bpm el script avisa y muestra la mitad y el doble.
+  NO lo corrijas por tu cuenta ni lo des por bueno: preguntale al usuario cuál usar.
+- Si falta el _tempo.txt, el script aborta con el comando exacto para generarlo (analizar.sh).
+- El --start lo elige el usuario; el script todavía NO lo ajusta a la grilla de beats (pendiente).

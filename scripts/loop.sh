@@ -8,11 +8,17 @@ OUT_DIR=""
 SALIDA=""
 START="0"
 FADE="0"
+BPM_OPT=""
 POSICIONALES=()
+
+# Lee el valor de una clave en un archivo "<clave> <valor>" (los _tempo.txt del Analista).
+# Toma TODO el resto de la línea, porque hay valores con espacios (ej: "tonalidad_completa C mayor").
+valor_tempo() { awk -v k="$2" '$1==k {$1=""; sub(/^[ \t]+/,""); print; exit}' "$1"; }
 
 uso() {
   cat <<EOF
 Uso: ./scripts/loop.sh <archivo_wav> <bpm> <compases> [opciones]
+     ./scripts/loop.sh <archivo_wav> <compases> [opciones]      ← BPM detectado solo
 
 Extrae un fragmento con la duración EXACTA del loop y lo guarda en
   output/<cancion>/loops/<nombre>.wav
@@ -20,12 +26,17 @@ Extrae un fragmento con la duración EXACTA del loop y lo guarda en
 
 Duración = (60 / bpm) * 4 * compases     ← asume compás de 4/4 (4 tiempos)
 
+Si omitís el BPM, se usa el DETECTADO por el Analista para esa canción
+(output/<cancion>/analisis/<cancion>_tempo.txt, error < 1%). Se redondea al entero
+más cercano y se avisa si cae fuera del rango habitual de un loop (75-170 bpm).
+
 Argumentos:
   <archivo_wav>  Archivo de entrada (ruta o relativa a la raíz)
-  <bpm>          Tempo, en pulsos por minuto (ej: 110)
+  <bpm>          Tempo en pulsos por minuto (ej: 110). Opcional si ya hay análisis.
   <compases>     Cantidad de compases (ej: 8)
 
 Opciones:
+  --bpm <n>          BPM explícito (alternativa a pasarlo como 2º argumento)
   --start <seg>      Segundo donde empieza el loop (default: 0)
   --out <nombre>     Nombre de salida (sin .wav). Default: <archivo>_loop_<n>c_<bpm>bpm
   --out-dir <ruta>   Carpeta de destino explícita (relativa a la raíz o absoluta).
@@ -34,9 +45,15 @@ Opciones:
   -f, --forzar       Sobrescribe la salida sin preguntar
   -h, --help         Muestra esta ayuda
 
-Ejemplo:
+Ejemplos:
+  # BPM a mano (como siempre)
   ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 110 8 --start 32.5 --fade 5
-  → 110 bpm, 8 compases = 17.454545 s = 769.091 muestras a 44.1 kHz
+
+  # BPM detectado automáticamente (8 compases de "Down by the Seaside" = 92 bpm)
+  ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --start 32.5
+
+  # forzar un BPM puntual
+  ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --bpm 92.5
 EOF
 }
 
@@ -45,6 +62,7 @@ while [[ $# -gt 0 ]]; do
     -h|--help)   uso; exit 0 ;;
     -f|--forzar) FORZAR=1; shift ;;
     --start)     [[ $# -ge 2 ]] || die "--start necesita un valor en segundos."; START="$2"; shift 2 ;;
+    --bpm)       [[ $# -ge 2 ]] || die "--bpm necesita un número."; BPM_OPT="$2"; shift 2 ;;
     --out)       [[ $# -ge 2 ]] || die "--out necesita un nombre."; SALIDA="$2"; shift 2 ;;
     --out-dir)   [[ $# -ge 2 ]] || die "--out-dir necesita una ruta."; OUT_DIR="$2"; shift 2 ;;
     --fade)      [[ $# -ge 2 ]] || die "--fade necesita un valor en milisegundos."; FADE="$2"; shift 2 ;;
@@ -53,11 +71,17 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ ${#POSICIONALES[@]} -eq 3 ]] || { uso >&2; die "Se esperan 3 argumentos: <archivo_wav> <bpm> <compases>"; }
-ARCHIVO="${POSICIONALES[0]}"; BPM="${POSICIONALES[1]}"; COMPASES="${POSICIONALES[2]}"
+# --- Posicionales: <archivo> [<bpm>] <compases> -----------------------------
+case ${#POSICIONALES[@]} in
+  3) ARCHIVO="${POSICIONALES[0]}"; BPM="${POSICIONALES[1]}"; COMPASES="${POSICIONALES[2]}" ;;
+  2) ARCHIVO="${POSICIONALES[0]}"; BPM=""; COMPASES="${POSICIONALES[1]}" ;;
+  *) uso >&2; die "Se esperan 2 o 3 argumentos: <archivo_wav> [<bpm>] <compases>" ;;
+esac
+if [[ -n "$BPM_OPT" ]]; then
+  [[ -z "$BPM" ]] || die "Me pasaste el BPM dos veces (2º argumento '$BPM' y --bpm '$BPM_OPT'). Elegí uno."
+  BPM="$BPM_OPT"
+fi
 
-[[ "$BPM" =~ ^[0-9]+([.][0-9]+)?$ ]] && awk -v b="$BPM" 'BEGIN{exit !(b>0)}' \
-  || die "El BPM debe ser un número mayor a 0 (ej: 110). Recibido: '$BPM'"
 [[ "$COMPASES" =~ ^[0-9]+$ ]] && [[ "$COMPASES" -ge 1 ]] \
   || die "Los compases deben ser un entero >= 1 (ej: 8). Recibido: '$COMPASES'"
 [[ "$START" =~ ^[0-9]+([.][0-9]+)?$ ]] || die "--start debe ser un número (segundos). Recibido: '$START'"
@@ -67,6 +91,44 @@ ARCHIVO="$(resolver_existente "$ARCHIVO")"
 exigir_archivo "$ARCHIVO"
 exigir_comando ffmpeg "Instalalo con: sudo apt install ffmpeg"
 exigir_comando ffprobe "Instalalo con: sudo apt install ffmpeg"
+
+# --- Contexto: de qué canción y modelo salió el audio ----------------------
+IFS='|' read -r CANCION MODELO_CTX <<< "$(deducir_contexto "$ARCHIVO")"
+
+# --- BPM: el que pasaste, o el detectado en el análisis de esa canción ------
+AUTO_BPM=0
+BPM_EXACTO=""; TONALIDAD_TXT=""
+if [[ -z "$BPM" ]]; then
+  if [[ -z "$CANCION" ]]; then
+    die "Para usar el BPM automático necesito deducir la canción desde la ruta del archivo,
+    y no pude hacerlo con '${ARCHIVO#"$ROOT_DIR"/}'.
+    Pasá el BPM a mano:  ./scripts/loop.sh \"${ARCHIVO#"$ROOT_DIR"/}\" <bpm> $COMPASES"
+  fi
+  ARCH_TEMPO="$(raiz_salida "$CANCION")/analisis/${CANCION}_tempo.txt"
+  if [[ ! -f "$ARCH_TEMPO" ]]; then
+    die "No encontré el BPM detectado de '$CANCION' (falta ${ARCH_TEMPO#"$ROOT_DIR"/}).
+    Generálo primero:
+      ./scripts/analizar.sh \"$CANCION.mp3\"
+    o pasá el BPM a mano:
+      ./scripts/loop.sh \"${ARCHIVO#"$ROOT_DIR"/}\" <bpm> $COMPASES"
+  fi
+  BPM_EXACTO="$(valor_tempo "$ARCH_TEMPO" bpm)"
+  TONALIDAD_TXT="$(valor_tempo "$ARCH_TEMPO" tonalidad_completa)"
+  [[ -n "$BPM_EXACTO" ]] || die "El análisis '${ARCH_TEMPO#"$ROOT_DIR"/}' no tiene un BPM legible."
+  BPM="$(awk -v b="$BPM_EXACTO" 'BEGIN{printf "%d", b+0.5}')"
+  AUTO_BPM=1
+
+  BPM_DOBLE="$(valor_tempo "$ARCH_TEMPO" bpm_doble)"
+  BPM_MITAD="$(valor_tempo "$ARCH_TEMPO" bpm_mitad)"
+  if awk -v b="$BPM_EXACTO" 'BEGIN{exit !(b<75 || b>170)}'; then
+    aviso "El BPM detectado ($BPM_EXACTO) está fuera del rango habitual de un loop (75-170 bpm).
+    Puede ser la mitad o el doble del real:  mitad = $BPM_MITAD   doble = $BPM_DOBLE
+    Si querés forzar otro valor:  --bpm <n>"
+  fi
+fi
+
+[[ "$BPM" =~ ^[0-9]+([.][0-9]+)?$ ]] && awk -v b="$BPM" 'BEGIN{exit !(b>0)}' \
+  || die "El BPM debe ser un número mayor a 0 (ej: 110). Recibido: '$BPM'"
 
 # --- Cálculo exacto de la duración -----------------------------------------
 TIEMPO=$(awk -v b="$BPM" 'BEGIN{printf "%.6f", 60/b}')
@@ -84,7 +146,6 @@ BASE="$(nombre_base "$ARCHIVO")"
 [[ -n "$SALIDA" ]] || SALIDA="${BASE}_loop_${COMPASES}c_${BPM}bpm"
 
 # --- Destino: output/<cancion>/loops/  o  output/_sueltos/loops/ ------------
-IFS='|' read -r CANCION MODELO_CTX <<< "$(deducir_contexto "$ARCHIVO")"
 if [[ -n "$OUT_DIR" ]]; then
   DIR_SALIDA="$(absoluta "$OUT_DIR")"
 elif [[ -n "$CANCION" ]]; then
@@ -97,7 +158,12 @@ DESTINO="$DIR_SALIDA/$SALIDA.wav"
 
 cabecera "EXTRACCIÓN DE LOOP"
 detalle "Entrada   : ${ARCHIVO#"$ROOT_DIR"/}  ($(mmss "$DUR_ARCHIVO"))"
-detalle "Tempo     : $BPM bpm  →  1 tiempo = $TIEMPO s  →  1 compás (4/4) = $COMPAS s"
+if [[ $AUTO_BPM == 1 ]]; then
+  detalle "Tempo     : $BPM bpm  ← DETECTADO (exacto: $BPM_EXACTO · tonalidad: $TONALIDAD_TXT)"
+else
+  detalle "Tempo     : $BPM bpm  ← indicado por el usuario"
+fi
+detalle "            1 tiempo = $TIEMPO s  →  1 compás (4/4) = $COMPAS s"
 detalle "Loop      : $COMPASES compases = $DUR s  ($MUESTRAS muestras a 44.1 kHz)"
 detalle "Desde     : $START s  hasta $FIN s"
 detalle "Salida    : ${DESTINO#"$ROOT_DIR"/}"

@@ -303,6 +303,13 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
 **Capacidades concretas:**
 
 - Extraer un loop cuya duración es exactamente **`(60 / BPM) * 4 * compases`** (asume **4/4**).
+- **Usar el BPM detectado automáticamente**: si omitís el `<bpm>`, lo lee de
+  `output/<cancion>/analisis/<cancion>_tempo.txt` (el análisis del **mix**, que es el más confiable),
+  lo **redondea** al entero más cercano e informa de dónde salió (exacto + tonalidad). También podés
+  pasarlo con `--bpm <n>`.
+- **Advertir sobre la octava**: si el BPM detectado cae fuera de **75-170 bpm**, avisa de que puede ser
+  la mitad o el doble del real y muestra los dos valores… pero **no lo corrige solo** (el usuario decide
+  con `--bpm`). Caso real: el stem de batería de *Boogie with Stu* da 66.56 cuando el tema es 133.21.
 - Empezar en un **segundo específico** con `--start` (acepta decimales: `32.5`).
 - Agregar **fade in/out** con `--fade <ms>` para evitar clicks al loopear.
 - **Verificar el resultado**: informa duración esperada, real y la **diferencia en ms**
@@ -316,6 +323,7 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
 **Frases que debe reconocer:**
 
 - "loop de 8 compases a 110 BPM" · "dame 8 compases a 110"
+- "hacé un loop de 8 compases" · "sacame un loop de este tema" *(sin BPM: se detecta solo)*
 - "loop de 4 compases desde el segundo 30" · "un loop que arranque en 32.5"
 - "16 compases a 128" · "sacame un loop de un minuto" *(traducir: elegir BPM y compases equivalentes)*
 - "que no tenga click" *(→ `--fade 5`)*
@@ -324,8 +332,9 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
 **Límites (NO hace):**
 
 - ❌ No separa, no mezcla y no filtra.
-- ❌ **No detecta el BPM automáticamente**: se lo tiene que dar el usuario (si no lo sabe, hay que
-  estimarlo aparte → ver *Pendientes*).
+- ❌ **No ajusta el `--start` a la grilla de beats**: el BPM sí es automático, pero *dónde empieza*
+  el loop lo elegís vos. Si el `--start` no cae en un tiempo, el loop arranca a mitad de compás
+  (*pendiente*: usar los beats detectados del `_tempo.json` para sugerir el `--start` exacto).
 - ❌ **No cambia el tempo del audio** (no hay time-stretch/warp): solo **recorta**. Si el BPM real del
   tema no es exactamente el indicado, el loop se va a desfasar al repetir.
 - ⚠️ Asume **compás de 4/4**: para 3/4, 6/8 o 7/8 la fórmula no aplica *(pendiente)*.
@@ -336,6 +345,12 @@ VOLS="drums=3dB,bass=0.7" ./scripts/mezclar.sh "output/Down by the Seaside/splee
 # 8 compases a 110 BPM desde el segundo 32.5 (= 17.454560 s exactos)
 #   -> output/Down by the Seaside/loops/base_loop_8c.wav
 ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 110 8 --start 32.5 --out base_loop_8c
+
+# SIN BPM: lo detecta solo (Down by the Seaside = 91.85 -> 92 bpm) = 20.869568 s
+./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --start 32.5
+
+# forzar un BPM puntual en vez del detectado
+./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --bpm 92.5
 
 # con fade de 5 ms para que no haya click al loopear
 ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 110 8 --start 32.5 --fade 5 --out base_loop_8c_fade
@@ -425,7 +440,7 @@ head -20 "output/Down by the Seaside/analisis/Down by the Seaside_acordes.txt"
 | Masterizador | **Normalización de loudness** (LUFS) | filtro nuevo en `limpiar.sh` con `loudnorm=I=-14:TP=-1:LRA=11` o `dynaudnorm` |
 | Masterizador | **Compresión / reverb / delay / EQ** | cadenas ffmpeg: `acompressor`, `aecho`, `equalizer` |
 | Masterizador | **Rango real** en `bandpass` (ej. 200-5000) | agregar `--hasta <hz>` que combine `highpass` + `lowpass` en un solo pase |
-| Looper | **Detección automática de BPM** | ✅ el motor ya existe: `scripts/analizar_bpm.py` (lo usa el Analista). Falta que `loop.sh` lo consulte para usar el BPM detectado cuando no se lo pasan |
+| Looper | **Ajustar el `--start` a la grilla de beats** | ✅ el BPM ya es automático (`loop.sh` lo lee del `_tempo.txt`). Falta que `loop.sh` lea los beats de `<cancion>_tempo.json` y proponga/valide el `--start` exacto en vez de dejarlo "a ojo" |
 | Looper | **Time-stretch / warp** al BPM objetivo | `atempo` (ffmpeg) o `rubberband` (mejor calidad) |
 | Looper | **Compases ≠ 4/4** | parámetro `--tiempos-por-compas` (por defecto 4) |
 | Analista | **Estructura** del tema (intro/verso/estribillo) | ✅ BPM y tonalidad ya están hechos (`scripts/analizar_bpm.py`, validado: <1 % de error en BPM y tonalidad correcta en las 2 canciones de prueba). Falta la estructura: segmentación por auto-similitud (`librosa.segment`) |

@@ -198,14 +198,33 @@ Con `--out-dir <ruta>` se fuerza otro destino.
 
 ```bash
 ./scripts/loop.sh <archivo_wav> <bpm> <compases> [--start <seg>] [--fade <ms>]
+./scripts/loop.sh <archivo_wav> <compases> [opciones]      ← BPM detectado solo
 ```
 
 Duración = `(60 / bpm) * 4 * compases` ← **asume compás de 4/4**.
 
+**El BPM ahora es opcional.** Si lo omitís (o usás `--bpm <n>`), `loop.sh` lee el BPM que detectó el
+Analista para esa canción en `output/<cancion>/analisis/<cancion>_tempo.txt` — el del **mix**, no el
+del stem, porque en un stem puramente rítmico el pulso es ambiguo. Lo redondea al entero y te informa
+de dónde salió:
+
 ```bash
+# sin BPM: usa el detectado (Down by the Seaside = 91.85 → 92 bpm)
+./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --start 32.5
+# Tempo: 92 bpm ← DETECTADO (exacto: 91.85 · tonalidad: C mayor)  → 8 compases = 20.869568 s
+
+# a mano, como siempre
 ./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 110 8 --start 32.5 --fade 5
 # 110 bpm, 8 compases = 17.454560 s = 769.091 muestras a 44.1 kHz
+
+# forzar un BPM puntual
+./scripts/loop.sh "output/Down by the Seaside/htdemucs/base_ritmica.wav" 8 --bpm 92.5
 ```
+
+⚠️ Si el BPM detectado cae **fuera de 75-170 bpm**, el script avisa de que puede ser la mitad o el
+doble del real (te muestra los dos valores) y **no lo corrige solo**: lo forzás con `--bpm <n>`.
+Si la canción todavía no tiene análisis, aborta indicándote el comando exacto
+(`./scripts/analizar.sh "<cancion>.mp3"`).
 
 Verificación real de una corrida: esperado `17.454560 s`, obtenido `17.454558 s`
 → **diferencia 0.0 ms**: corte sample-perfecto. Usá `--fade 5` si notás un click
