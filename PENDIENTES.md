@@ -42,16 +42,28 @@
 - **Canciones procesadas**:
   - `Down by the Seaside`: 4 stems (htdemucs) + 6 stems (htdemucs_6s) + loop + mezclas + análisis (84 segmentos)
   - `Boogie with Stu`: 6 stems (htdemucs_6s) + análisis por stem (6) + análisis de la mezcla (43 segmentos)
-- **Docs**: `.clinerules` (117 líneas), `AGENTES.md` (436), `README.md` (522),
+- **Docs**: `.clinerules` (117 líneas), `AGENTES.md` (436), `README.md` (497),
   `PENDIENTES.md` (142) + backups `.bak_pre_spleeter` de los 3
   (versión anterior al cambio de estructura).
 - **Repo en GitHub** (24/Sep): `https://github.com/flacogabrielc/split_music` — **público**, rama `main`.
   21 archivos / 492 KB (scripts + docs). `venv/`, `mp3/`, `output/` y `separated/` quedaron en `.gitignore`.
   Remote por **SSH**. El repo nació con un `Initial commit` de GitHub (README placeholder) y la
   divergencia se resolvió con **rebase** → historial lineal, **sin `--force`**.
-  Verificado: se clona en otra PC por HTTPS **sin credenciales**.
+  Verificado: se clona en otra PC por HTTPS **sin credenciales**. (24/Sep: quedó en **22 archivos**
+  tras borrar `Readme.txt` y sumar `analizar_bpm.py` y `validar_digitaciones.py`.)
 - **`requirements.txt`**: 72 paquetes del venv + la receta de instalación escrita adentro
   (resuelve la trampa de `Requires-Python: <3.12` de chord-extractor).
+- **Limpieza + decisiones cerradas** (24/Sep): se borraron los artefactos de prueba de `output/`
+  (`prueba_30s/` + los `test_*.wav` y `prueba_30s_*.wav`: **~156 MB liberados**) y del repo
+  (`git rm Readme.txt`, que era un volcado crudo de terminal; la versión corregida es
+  `COMANDOS_MANUALES.txt` y git conserva el original en el historial). La sección 11 del `README`
+  (que documentaba esos archivos) se eliminó y la 12 pasó a ser la 11.
+  Decisiones cerradas **sin cambios**: los derivados siguen en `output/<cancion>/<modelo>/` (mantiene
+  la trazabilidad de qué modelo produjo cada stem) y `separated/` sigue recreándose con `mkdir -p`.
+- **Análisis de `output/` regenerados** (24/Sep): los **8 informes** (2 mixes + 6 stems) ahora tienen
+  `_tempo.{txt,json}` y muestran BPM/tonalidad + los diagramas nuevos, **sin re-extraer acordes**.
+  Dato real que vale anotar: en el stem de **batería** el BPM salió **66.56** (la mitad de 133.21) —
+  es el caso típico de pulso ambiguo sin armonía; conviene mirar `bpm_doble` en el `_tempo.txt`.
 
 ## ⏳ Pendientes (en orden sugerido)
 
@@ -62,22 +74,10 @@
    acumula ~1 s de corrimiento).
 2. **Mejoras del HTML** charladas: filtro por instrumento, comparar stems lado a lado, barras por
    compás. (Las métricas de BPM/tonalidad y las digitaciones ya se agregaron el 24/Sep.)
-3. **Decisión abierta**: los derivados van a `output/<cancion>/<modelo>/` (actual) —
-   ¿o preferís `output/<cancion>/mezclas/`?
-4. **Limpieza opcional**: `rm -rf output/prueba_30s` (artefacto de mis pruebas) y
-   los `test_*.wav` / `prueba_30s_*.wav` de la raíz de `output/` (tuyos, para borrar vos).
-5. **`Readme.txt` reapareció** (24/Sep 01:27, 102 líneas): es tu nota **original**, con los
-   `--stems` que corregimos. Probablemente el editor la tenía abierta y la guardó después del
-   renombre. Hoy conviven:
-   - `Readme.txt` → versión vieja (con los `--stems` inexistentes)
-   - `COMANDOS_MANUALES.txt` → versión corregida
-   Decidí: borrar el viejo, fusionar, o dejarlo como histórico. **No lo toqué** (es tuyo).
-6. **`separated/`** existe de nuevo pero **vacía**: la recrea `procesar.sh` con `mkdir -p`
-   (es el staging documentado de Demucs). No molesta; si querés se elimina esa línea.
-7. **Descripción del repo en GitHub** (opcional, 30 s en la web): el tagline
+3. **Descripción del repo en GitHub** (opcional, 30 s en la web): el tagline
    *"Un separador de pistas y creador de partituras y acordes"* quedó solo en el commit inicial
    `ad87b8d`; el `README.md` actual arranca distinto. Se puede pegar en *Settings → Description*.
-8. **Analista: estructura del tema** (intro / verso / estribillo) — es lo que le queda al rol después
+4. **Analista: estructura del tema** (intro / verso / estribillo) — es lo que le queda al rol después
    de BPM y tonalidad. Se haría con `librosa.segment` (auto-similitud) sobre el croma ya calculado.
 
 ## 🔗 Repositorio (GitHub)

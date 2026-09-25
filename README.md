@@ -9,7 +9,7 @@ loops para practicar guitarra o armar remixes. Todo el procesamiento es **local*
 >
 > 🤖 **¿Preferís pedir las tareas en lenguaje natural?** Ver [`AGENTES.md`](AGENTES.md), que define
 > los roles **Separador, Mezclador, Masterizador y Looper** (resumen en la
-> [sección 12](#12-roles-de-trabajo)).
+> [sección 11](#11-roles-de-trabajo)).
 
 ---
 
@@ -463,32 +463,7 @@ sistema, y al terminar `separar.sh` te avisa si detectó ese warning.
 
 ---
 
-## 11. Archivos de prueba (generados al validar los scripts)
-
-Quedaron de las pruebas funcionales. **No se movieron a la nueva estructura** (son descartables),
-así que siguen sueltos en la raíz de `output/`:
-
-```bash
-ls -lh output/
-# prueba_30s_base_ritmica.wav        → drums+bass del clip de prueba
-# prueba_30s_bajo_lowpass220.wav     → bajo filtrado
-# prueba_30s_loop_8c_110bpm.wav      → loop exacto de 17.4546 s
-# test_bass_limpio.wav / test_base_ritmica.wav / test_loop_110bpm_8c.wav  → pruebas sueltas
-# Down by the Seaside/loops/base_loop_8c.wav → loop generado al validar la nueva estructura
-
-# para borrar solo las pruebas:
-rm -f output/test_*.wav output/prueba_30s_*.wav
-rm -f "output/Down by the Seaside/loops/base_loop_8c.wav"
-rm -rf output/prueba_30s
-```
-
-El clip de prueba era un recorte de 30 s (a partir del segundo 60) del tema
-`mp3/Down by the Seaside/Down by the Seaside.mp3`, generado en `/tmp` para **no
-tocar** tu carpeta `mp3/`.
-
----
-
-## 12. Roles de trabajo
+## 11. Roles de trabajo
 
 El proyecto tiene un archivo hermano, **[`AGENTES.md`](AGENTES.md)**, que define **4 roles de trabajo**
 pensados para invocarse **en lenguaje natural** desde el chat (sin escribir el comando):
