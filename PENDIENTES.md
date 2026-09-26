@@ -32,7 +32,8 @@ ese "no" es **información, no fracaso** (averiguarlo costó ~$0).
 2. **🖥️ Interfaz / diseñar** → **el paso que destraba todo** (recomendado: web local; ver ⏳ punto 1).
    **Orden corregido el 25/Sep:** primero **"algo que funcione con pantallas"** y diseñar; **después** el
    video y el README con **capturas reales** (no se puede filmar lo que no existe). Inventario de pantallas
-   y alcance del MVP: `PLAN_NEGOCIOS.local.md` **§12-13** (local).
+   y alcance del MVP: `PLAN_NEGOCIOS.local.md` **§12-13** (local) + **backlog de historias de usuario en
+   `HISTORIAS.local.md`** (local: épicas P1-P6, prioridad MoSCoW, estimaciones y criterios de aceptación).
 3. **🎼 Recursos para improvisar** (sección 🎼) → pedido nuevo del 25/Sep; se apoya en el rol Analista y
    en el **panel de tonalidad**, que es lo que hay que resolver primero.
 4. Después, lo que ya venía: mejoras del HTML (**multi-stem**) y estructura del tema.
