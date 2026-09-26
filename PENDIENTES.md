@@ -19,8 +19,13 @@ tocado hoy: este `PENDIENTES.md` (**sin commitear**).
 
 ## 🎯 Para retomar mañana
 
-Estado: **10 commits**, `main` ↔ `origin/main`, 23 archivos versionados; working tree limpio **salvo
-este `PENDIENTES.md`**. Retomá con *"leé `~/proyectos/spleeter/PENDIENTES.md` y seguimos"*.
+Estado: **19 commits**, `main` ↔ `origin/main`, **23 archivos versionados**; working tree **limpio** (el plan
+de negocio es local y está en `.gitignore`). Retomá con *"leé `~/proyectos/spleeter/PENDIENTES.md` y seguimos"*.
+
+**🧭 Premisa del proyecto (25/Sep):** *"Ambición sí, frustración 0. Que llegue donde llegue, que salga lo que
+salga."* → **cero gasto hasta que una fase lo pida por criterio** · **una fase por vez y cada una termina en
+algo mostrable** (demo, app publicada, un pago) · si una fase **no** da el criterio, **se corta y se anota**:
+ese "no" es **información, no fracaso** (averiguarlo costó ~$0).
 
 **Orden acordado el 25/Sep:**
 1. **🧰 Entorno** → packs A→D de la sección 🧰 (arrancar por el **pack A**, que es el de riesgo nulo).
