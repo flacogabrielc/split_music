@@ -29,7 +29,10 @@ ese "no" es **información, no fracaso** (averiguarlo costó ~$0).
 
 **Orden acordado el 25/Sep:**
 1. **🧰 Entorno** → packs A→D de la sección 🧰 (arrancar por el **pack A**, que es el de riesgo nulo).
-2. **🖥️ Interfaz** → **recomendado: web local** (ver ⏳ punto 1; falta el OK del usuario).
+2. **🖥️ Interfaz / diseñar** → **el paso que destraba todo** (recomendado: web local; ver ⏳ punto 1).
+   **Orden corregido el 25/Sep:** primero **"algo que funcione con pantallas"** y diseñar; **después** el
+   video y el README con **capturas reales** (no se puede filmar lo que no existe). Inventario de pantallas
+   y alcance del MVP: `PLAN_NEGOCIOS.local.md` **§12-13** (local).
 3. **🎼 Recursos para improvisar** (sección 🎼) → pedido nuevo del 25/Sep; se apoya en el rol Analista y
    en el **panel de tonalidad**, que es lo que hay que resolver primero.
 4. Después, lo que ya venía: mejoras del HTML (**multi-stem**) y estructura del tema.
@@ -493,6 +496,8 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
    **en inglés** con capturas; **(b)** **video demo de 90 s**; **(c)** **post técnico** con el hallazgo del
    **modo** (*el croma acierta la tónica pero falla el modo; lo resuelve la armonía*); **(d)** la app en
    **Play**. Es el mismo trabajo que desbloquea producto, negocio y carrera (ver `PLAN_NEGOCIOS.local.md`).
+   ⚠️ **ORDEN CORREGIDO (25/Sep):** esto va **después** de tener **algo que funcione con interfaz**. No se
+   puede filmar ni capturar pantallas que no existen → primero el punto 2.
 
 ## 🔗 Repositorio (GitHub)
 
