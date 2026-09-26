@@ -447,6 +447,41 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
    - ⚠️ **Ancho de banda**: servir 4 stems WAV (~160 MB) desde una conexión de casa es lento (a 10 Mbps de
      subida ≈ 2 min) → exportar **Opus/MP3** (16-36 MB) lo baja a 15-30 s.
 
+8. **📈 Estrategia: ¿"venderle la app a Spotify"? (preguntado el 25/Sep)** — idea del usuario: armar un PoC
+   prolijo (APK + web corriendo en su PC) y ofrecérselo a Spotify *"porque ellos ya tienen resuelta la parte
+   legal"*. **Opinión sincera: el demo SÍ, la puerta elegida NO.**
+   - ✅ **El demo es el paso correcto**: es barato, valida la UX y **es el mejor currículum posible**.
+     ⚠️ Detalle: el teléfono **no resuelve el `localhost` de la PC** → hay que apuntar a la **IP de la LAN**
+     (`http://192.168.x.x:8765`) + network security config + token. Medir lo que importa: que **3 de 4
+     músicos la usen 2 veces por semana sin que se lo pidas** (un "¡está bueno!" de amigos no es señal).
+   - ⚠️ **La competencia ya existe y es enorme — el dato que más pesa**: **Moises** — **+80 M de artistas**,
+     separación en **27 stems**, *Chord Finder*, *Speed Changer*, transcripción de letras, web + desktop +
+     iOS + Android, **free tier** + suscripción, iPad App del Año y premios de Apple/Microsoft, usado en
+     Berklee. Y **Logic Pro 11** trae **Stem Splitter** de fábrica. → **La separación de stems es un
+     commodity**: ahí no está el valor propio.
+   - 🎯 **El nicho real y abierto es el "coach de improvisación"**: Moises te da los stems y los acordes;
+     **nadie te dice** *"esto es un blues en A → estas pentatónicas, esta escala de blues, estos licks,
+     estos voicings, y practicá con este loop A/B"*. Ese cruce (análisis → recursos por grado + género →
+     práctica) **no lo vende nadie** y es justo lo que el proyecto tiene a medio construir.
+   - ⛔ **Por qué Spotify es la puerta equivocada (no por ambicioso: por mal target)**: **(a)** a las grandes
+     no se les vende una idea, se les **compra una empresa con usuarios/tecnología**; **(b)** **la legalidad
+     NO se transfiere**: sus licencias son para **streaming dentro de su app**, no para que un tercero
+     entregue **stems de obra con copyright** — es justo el derecho que no pueden ceder; **(c)** la
+     **Developer Policy** (vigente **15/may/2025**, verificada) es restrictiva con el contenido
+     (*Respect Content and Creators*, *Some prohibited applications*) y limita los *Audio Preview Clips* a
+     promover/enlazar, no a un servicio propio; **(d)** si les interesara, lo construyen **adentro de su app
+     con su audio licenciado** (van hacia ahí con herramientas de artista/IA).
+   - ✅ **Lo que SÍ abre puertas, en orden**: **(1)** que músicos reales la usen y la reusen; **(2)**
+     publicar en Play (u$s25) con el diseño **legal-safe** (on-device, archivos del usuario) y medir; **(3)**
+     **el repo ya es público** → pulido + video demo = portfolio para que **te contraten** en
+     Zound/Moises/Apple/Spotify (el camino realista a "trabajar en esto"); **(4)** monetizar al nicho
+     directo: **profesores, estudiantes y bandas de covers** (compra única o u$s3-5/mes; las academias pagan
+     por asiento); **(5)** recién entonces hablar con quien **sí** tiene licencias (sellos, editoriales,
+     academias).
+   - ⛔ **No hacer**: un servicio de separación en la nube (Moises + Logic + alternativas gratis + riesgo
+     legal), perseguir un acuerdo con Spotify **antes** de tener usuarios, y pagarle a alguien para
+     "representar la idea".
+
 ## 🔗 Repositorio (GitHub)
 
 - **URL**: https://github.com/flacogabrielc/split_music — público, rama `main`, upstream configurado.
