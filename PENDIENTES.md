@@ -417,6 +417,36 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
      el proyecto es local y privado).
    - **Orden**: va **después** de la UI (es cliente de ella) → **F6**.
 
+7. **☁️ Motor en la nube: ¿cuánto cuesta? (preguntado el 25/Sep)** — *"para publicar la app no voy a dejar
+   el PC corriendo: es riesgo y se fríe con 4 usuarios"*. **Respuesta: el cómputo es BARATO (centavos por
+   canción); lo caro/crítico es lo LEGAL y la disponibilidad.** Base de cálculo = **su propio benchmark**:
+   Demucs a **2,27× tiempo real** con 8 hilos (234 s de audio en 103 s) ≈ **824 vCPU-s por canción de 4 min**
+   (≈14 vCPU-min).
+   - **Serverless GPU — Modal** (verificado el 25/Sep): **T4 u$s0.000164/s**, L4 u$s0.000222/s, A10
+     u$s0.000306/s, A100-40GB u$s0.000583/s · CPU u$s0.0000131/(core físico = 2 vCPU)/s · RAM
+     u$s0.00000222/GiB/s · **no se paga el idle** y el plan **Starter trae u$s30/mes de cómputo gratis**.
+     Una canción en GPU (con el modelo cargado) ≈ **20-40 s** → **~u$s0,005/canción** →
+     **4 usuarios ≈ 1.200 canciones/mes ≈ u$s6 → u$s0 con el crédito gratis**.
+   - **Serverless CPU — Cloud Run** (verificado): free tier **240.000 vCPU-s + 450.000 GiB-s por mes** →
+     **≈ 290 canciones/mes GRATIS** (824 vCPU-s c/u); después, centavos. Escala a cero, factura por 100 ms.
+   - **Stems — Cloudflare R2** (verificado): **egress GRATIS** (clave: los stems son grandes), **10 GB-mes
+     gratis**, u$s0,015/GB-mes. 1.200 canciones en MP3 (≈36 MB c/u) = 43 GB → **~u$s0,50/mes**; borrando a
+     los 7 días, casi $0.
+   - **VPS 24/7 tipo Hetzner (~8 vCPU)**: precio plano del orden de **u$s25-30/mes** (no verificado en esta
+     consulta) → **más caro que serverless** a este volumen, pero simple y previsible.
+   - ❌ **GitHub Actions NO sirve para esto**: es para CI/CD del repo (sus términos lo prohíben como backend
+     de una app), no da endpoint HTTP persistente ni escala a cero.
+   - ⚠️ **El costo NO es el problema; el problema es LEGAL**: si la app pública sube la canción de un usuario
+     y le devuelve los stems, **se está alojando y redistribuyendo obra derivada con copyright** (más la
+     política de privacidad y el formulario *Data safety* que exige Google Play). **Eso** puede tumbar la
+     publicación, no los u$s5.
+   - **Ruta recomendada por fases**: **(0)** 4 amigos → PC + **Cloudflare Tunnel + Access** (gratis, sin abrir
+     puertos) o Tailscale, u$s0 · **(1)** app pública **sin Demucs**, todo on-device (u$s0/mes y sin riesgo
+     legal) · **(2)** separación en la nube con serverless GPU + R2 (u$s0-6/mes para ese volumen) ·
+     **(3)** escala: cobrar créditos por uso.
+   - ⚠️ **Ancho de banda**: servir 4 stems WAV (~160 MB) desde una conexión de casa es lento (a 10 Mbps de
+     subida ≈ 2 min) → exportar **Opus/MP3** (16-36 MB) lo baja a 15-30 s.
+
 ## 🔗 Repositorio (GitHub)
 
 - **URL**: https://github.com/flacogabrielc/split_music — público, rama `main`, upstream configurado.
