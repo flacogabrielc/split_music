@@ -27,6 +27,12 @@ salga."* → **cero gasto hasta que una fase lo pida por criterio** · **una fas
 algo mostrable** (demo, app publicada, un pago) · si una fase **no** da el criterio, **se corta y se anota**:
 ese "no" es **información, no fracaso** (averiguarlo costó ~$0).
 
+**🎨 Decisiones de herramientas (25/Sep, para no volver a discutirlo):** **diseño** → **Penpot** (open
+source, self-host, gratis, exporta CSS/HTML/SVG) o **Excalidraw** para tirar ideas; **Figma Starter** también
+alcanza (drafts ilimitados). **Gestión** → **GitHub Projects + Issues** (ya lo tenemos) **o** Jira si se
+prefiere por costumbre laboral: **elegir UNA**. **El wireframe en HTML *es* la app** (no se duplica diseño).
+**📁 Seguimiento:** **`MVP.md`** = alcance, pantallas, mapa de archivos y **checklist por ID de historia**.
+
 **Orden acordado el 25/Sep:**
 1. **🧰 Entorno** → packs A→D de la sección 🧰 (arrancar por el **pack A**, que es el de riesgo nulo).
 2. **🖥️ Interfaz / diseñar** → **el paso que destraba todo** (recomendado: web local; ver ⏳ punto 1).
