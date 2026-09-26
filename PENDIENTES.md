@@ -352,17 +352,20 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
          o un iMac 2019 **se quedan en Sequoia 15**.
        → **Si te quedás en Sequoia 15: NO alcanza para PUBLICAR** (no existe Xcode 26 para Sequoia), pero
          **SÍ para programar** (Xcode 16 local: compila, corre simulador y hasta instala en tu propio iPhone).
-       → **📌 Dato real del usuario (25/Sep, validado)**: su Mac corre **macOS 15.8 (Sequoia)** → cae en la
-         rama de arriba (**no publica desde esa Mac; sí con Xcode Cloud**). Queda **un chequeo abierto (30 s)**
-         antes de cerrar el tema, porque lo que define si puede instalar Tahoe es el **modelo**, no la versión
-         de hoy: `sysctl hw.model` → **MacBookPro16,1** (MBP 16" 2019), **MacBookPro16,2** (MBP 13" 2020 de 4
-         puertos), **iMac20,1 / iMac20,2** (iMac 2020) y **MacPro7,1** (Mac Pro 2019) **sí llegan**; cualquier
-         otro **se queda en Sequoia**. Y en *Ajustes → General → Actualización de software*: si le ofrece
-         **"macOS Tahoe 26"**, llega (aunque hoy esté en 15.8).
-         **Qué se puede y qué no en Sequoia 15.8**: programar iOS con Kotlin/Native + CMP ✅ · simulador ✅
-         (`iosX64`, el target **Tier 3**) · **instalarla en su propio iPhone** ✅ (Xcode 16 al device: Apple ID
-         gratis = 7 días, membresía paga = 1 año / 100 dispositivos) · **subir a App Store / TestFlight** ❌
-         (es **la única pared**: exige Xcode 26) → ahí entra **Xcode Cloud**.
+       → **📌 MODELO CONFIRMADO (25/Sep)**: **MacBook Pro (13-inch, 2019, Four Thunderbolt 3 ports)** —
+         **i7 quad 2.8 GHz + 16 GB LPDDR3** (ese i7 de 2.8 sólo existió en ese modelo; el 2018 era 2.7 y el
+         2020 de 4 puertos es 10ª gen 2.3). Identificador: `MacBookPro15,2` (confirmar con `sysctl hw.model`).
+         **Está corriendo macOS 15.8 Sequoia = SU TECHO**, y eso cierra el tema: **NO está en la lista de
+         Tahoe** (el único 13" que Apple dejó es el **2020** de 4 puertos; Tahoe se limitó a **iMac 2020,
+         MBP 16" 2019, MBP 13" 2020 4TB3 y Mac Pro 2019** — ni MacBook Air ni Mac mini Intel entraron).
+         **CONCLUSIÓN CERRADA**:
+         · **Xcode máximo = 16.x** (no hay Xcode 26 ni 27 para Sequoia) → **NO puede subir a App Store ni
+           TestFlight desde esa Mac**. Para publicar: **Xcode Cloud** (u$s99/año, 25 h/mes incluidas) o una
+           **Mac nueva** (un **Mac mini M1 usado** es lo más barato).
+         · **SÍ puede programar iOS**: Xcode 16 compila Kotlin/Native + CMP, corre el simulador (`iosX64`,
+           Tier 3) e **instala en su propio iPhone** (Apple ID gratis = 7 días; membresía = 1 año / 100
+           dispositivos). Y Xcode 16 alcanza para **configurar Xcode Cloud** (o se hace desde la web).
+         · **Su Mac sirve perfecto para el target real de hoy: Android** (Studio + Compose + Gradle con 16 GB).
        → **La salida real si no llegás: Xcode Cloud** (verificado): **incluido en la membresía** (u$s99/año)
          con **25 h de cómputo por mes**, compila **en las máquinas de Apple con el Xcode más nuevo**, se
          maneja desde Xcode o desde la web de App Store Connect e integra **TestFlight**. O sea: **Mac vieja
