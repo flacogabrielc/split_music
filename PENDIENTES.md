@@ -352,6 +352,17 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
          o un iMac 2019 **se quedan en Sequoia 15**.
        → **Si te quedás en Sequoia 15: NO alcanza para PUBLICAR** (no existe Xcode 26 para Sequoia), pero
          **SÍ para programar** (Xcode 16 local: compila, corre simulador y hasta instala en tu propio iPhone).
+       → **📌 Dato real del usuario (25/Sep, validado)**: su Mac corre **macOS 15.8 (Sequoia)** → cae en la
+         rama de arriba (**no publica desde esa Mac; sí con Xcode Cloud**). Queda **un chequeo abierto (30 s)**
+         antes de cerrar el tema, porque lo que define si puede instalar Tahoe es el **modelo**, no la versión
+         de hoy: `sysctl hw.model` → **MacBookPro16,1** (MBP 16" 2019), **MacBookPro16,2** (MBP 13" 2020 de 4
+         puertos), **iMac20,1 / iMac20,2** (iMac 2020) y **MacPro7,1** (Mac Pro 2019) **sí llegan**; cualquier
+         otro **se queda en Sequoia**. Y en *Ajustes → General → Actualización de software*: si le ofrece
+         **"macOS Tahoe 26"**, llega (aunque hoy esté en 15.8).
+         **Qué se puede y qué no en Sequoia 15.8**: programar iOS con Kotlin/Native + CMP ✅ · simulador ✅
+         (`iosX64`, el target **Tier 3**) · **instalarla en su propio iPhone** ✅ (Xcode 16 al device: Apple ID
+         gratis = 7 días, membresía paga = 1 año / 100 dispositivos) · **subir a App Store / TestFlight** ❌
+         (es **la única pared**: exige Xcode 26) → ahí entra **Xcode Cloud**.
        → **La salida real si no llegás: Xcode Cloud** (verificado): **incluido en la membresía** (u$s99/año)
          con **25 h de cómputo por mes**, compila **en las máquinas de Apple con el Xcode más nuevo**, se
          maneja desde Xcode o desde la web de App Store Connect e integra **TestFlight**. O sea: **Mac vieja
