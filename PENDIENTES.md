@@ -342,9 +342,22 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
      - ⚠️ **Los 2 asteriscos de la Mac Intel** (verificado el 25/Sep en las tablas de Apple y de Kotlin):
        **(1)** La App Store **exige Xcode 26+** para subir un app iOS (App Store Connect Help: *"iOS app …
        built using Xcode 26 or later"*), y **Xcode 26.x pide macOS Tahoe 26.2+** (Xcode 27, Tahoe 26.6+).
-       → **Si tu Intel llega a macOS 26 Tahoe, TODAVÍA podés publicar**; hay que **verificar el modelo
-       exacto** (Tahoe fue la **última** con soporte Intel y solo para los modelos más nuevos). **La ventana
-       es de ~1-2 años**: cuando Apple exija Xcode 28 (macOS 27+ = solo Apple silicon), se terminó.
+       → **Numeración** (aclarado el 25/Sep): macOS saltó **15 Sequoia → 26 Tahoe → 27 Golden Gate**
+         (numeración por año, igual que iOS 26/27). Ojo: **Tahoe SÍ corre en Intel** (plataformas
+         soportadas: ARM64 + **x86-64**) → es la **última** con Intel, no la primera sin.
+       → **Cómo saber en 30 s si tu Mac llega**: menú Apple → *Acerca de esta Mac* (modelo/año) y
+         *Ajustes → General → Actualización de software*: **si te ofrece Tahoe, llegás**. Los Intel que
+         entraron en Tahoe son los **últimos de cada línea** (MacBook Pro 16" 2019, MBP 13" 2020 de 4 puertos
+         TB3, iMac 2020, Mac Pro 2019) → **verificar el modelo exacto**. Un MBP 2018/2019, un Mac mini 2018
+         o un iMac 2019 **se quedan en Sequoia 15**.
+       → **Si te quedás en Sequoia 15: NO alcanza para PUBLICAR** (no existe Xcode 26 para Sequoia), pero
+         **SÍ para programar** (Xcode 16 local: compila, corre simulador y hasta instala en tu propio iPhone).
+       → **La salida real si no llegás: Xcode Cloud** (verificado): **incluido en la membresía** (u$s99/año)
+         con **25 h de cómputo por mes**, compila **en las máquinas de Apple con el Xcode más nuevo**, se
+         maneja desde Xcode o desde la web de App Store Connect e integra **TestFlight**. O sea: **Mac vieja
+         para programar + Xcode Cloud para compilar y subir**. (Alternativa si sobra plata: un **Mac mini M1
+         usado**.) La ventana sigue siendo de **~1-2 años**: cuando Apple exija Xcode 28 (macOS 27+ = solo
+         Apple silicon), se terminó.
        **(2)** **El simulador en Intel** usa `iosX64`, que Kotlin tiene en **Tier 3** (*"not in active
        development… may come with breaking issues. Use them with caution"*), y sus hermanos x86_64
        (`macosX64`, `watchosX64`, `tvosX64`) **ya están deprecados desde Kotlin 2.3.20**.
