@@ -32,3 +32,9 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# 7) Documentos PRIVADOS del autor (plan de negocio, estrategia, precios).
+#    ⚠️ El repo es PÚBLICO: esto NUNCA se sube. Se versiona, si hace falta, en un repo privado.
+*.local.md
+PLAN_NEGOCIOS.local.md
+

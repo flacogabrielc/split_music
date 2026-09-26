@@ -481,6 +481,9 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
    - ⛔ **No hacer**: un servicio de separación en la nube (Moises + Logic + alternativas gratis + riesgo
      legal), perseguir un acuerdo con Spotify **antes** de tener usuarios, y pagarle a alguien para
      "representar la idea".
+   - 🔒 **El plan de negocio completo vive en `PLAN_NEGOCIOS.local.md`** — archivo **LOCAL y PRIVADO**: está
+     en `.gitignore` (`*.local.md`) y **no se sube** (el repo es público). Ahí están el mapa competitivo, los
+     segmentos S1-S5, precios, fases con go/no-go, métricas y los próximos 5 pasos.
 
 ## 🔗 Repositorio (GitHub)
 
