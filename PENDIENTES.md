@@ -366,6 +366,17 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
            Tier 3) e **instala en su propio iPhone** (Apple ID gratis = 7 días; membresía = 1 año / 100
            dispositivos). Y Xcode 16 alcanza para **configurar Xcode Cloud** (o se hace desde la web).
          · **Su Mac sirve perfecto para el target real de hoy: Android** (Studio + Compose + Gradle con 16 GB).
+         · **🎮 DESARROLLO Y PRUEBAS = 100% LOCAL Y GRATIS** (aclarado el 25/Sep, porque se había entendido
+           lo contrario: *"¿no se puede usar un emulador? ¿se desarrolla a ciegas?"*). **NO se desarrolla a
+           ciegas**: **Android** → emulador de Android Studio + **teléfono real por USB** (lo mejor para
+           probar latencia de audio); **iOS** → **el simulador de iOS viene incluido con Xcode 16** y corre
+           en Sequoia, más su **propio iPhone** con Apple ID gratis. Y el **simulador de Android** ya lo
+           tienen andando de la app del fixture.
+         · 💰 **La plata NO es para desarrollar, es SÓLO para PUBLICAR**: la membresía Apple de **u$s99/año**
+           es la **misma** que hace falta para subir algo a la App Store con **cualquier** Mac (nueva o
+           vieja) → **no es un costo extra "de la nube"**, y encima **incluye** las 25 h de Xcode Cloud.
+           Google Play: **u$s25 una sola vez**. Todo el resto del ciclo (programar, probar, instalar en los
+           propios teléfonos) es **gratis**.
        → **La salida real si no llegás: Xcode Cloud** (verificado): **incluido en la membresía** (u$s99/año)
          con **25 h de cómputo por mes**, compila **en las máquinas de Apple con el Xcode más nuevo**, se
          maneja desde Xcode o desde la web de App Store Connect e integra **TestFlight**. O sea: **Mac vieja
