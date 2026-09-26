@@ -489,6 +489,10 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
    - 🔒 **El plan de negocio completo vive en `PLAN_NEGOCIOS.local.md`** — archivo **LOCAL y PRIVADO**: está
      en `.gitignore` (`*.local.md`) y **no se sube** (el repo es público). Ahí están el mapa competitivo, los
      segmentos S1-S5, precios, fases con go/no-go, métricas y los próximos 5 pasos.
+9. **📣 Publicar el proyecto (sirve a los 3 carriles a la vez)** — los **4 artefactos**: **(a)** `README.md`
+   **en inglés** con capturas; **(b)** **video demo de 90 s**; **(c)** **post técnico** con el hallazgo del
+   **modo** (*el croma acierta la tónica pero falla el modo; lo resuelve la armonía*); **(d)** la app en
+   **Play**. Es el mismo trabajo que desbloquea producto, negocio y carrera (ver `PLAN_NEGOCIOS.local.md`).
 
 ## 🔗 Repositorio (GitHub)
 
