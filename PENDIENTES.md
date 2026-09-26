@@ -290,6 +290,83 @@ AGENTES.md / .clinerules     EDIT   rol nuevo (ej. *Coach* / *Improvisador*) o e
      es un **WebView** (Capacitor o WebView pelado, ~1 día) instalada por sideload (sin Play Store).
    - 🆓 **Paso 0 gratis**: antes de la APK, **PWA** = `manifest.json` + service worker → *"Agregar a la
      pantalla de inicio"* ya da experiencia de app, sin compilar ni firmar nada.
+   - 🎨 **Y sí, también se puede una APK "de verdad" (Flutter / Kotlin)** — es **otra cosa** que envolver la
+     web, y se verificó el 25/Sep en pub.dev:
+     - **Flutter** compila a **ARM nativo** (no es un navegador): genera un **APK real** (~15-25 MB), con
+       ícono, instalable por sideload. ⚠️ **No ejecuta el Python**: la app **consume** el servidor de la PC
+       → el backend (punto 1) es **requisito de TODAS las opciones**; si arrancamos por el backend, elegir
+       cliente después no cuesta nada y no se tira nada.
+     - **Lo que gana** (paquetes confirmados hoy): `flutter_svg` **2.3.0** (mantenido por flutter.dev) tiene
+       **`SvgPicture.string()`** → los **diagramas SVG que ya genera `svg_diagrama()` se dibujan directo en
+       la app**; `just_audio` **0.10.6** trae **`setClip(inicio, fin)`** (loop A/B exacto para practicar),
+       **varios players a la vez** (comparar stems) y **`setSpeed`** (practicar más lento); y sobre todo
+       **modo OFFLINE real**: bajar los stems en Opus + los informes y ensayar **sin la PC**.
+     - **Lo que cuesta**: **duplica la UI** (salvo que se use `webview_flutter` **4.14.1**, de flutter.dev,
+       para embeber el informe HTML dentro de la app) + SDK de Flutter (~1-2 GB) + Dart + ~1-2 semanas.
+     - **Esfuerzo comparado**: **PWA ~2 h · APK-WebView ~1 día · Flutter ~1-2 semanas**.
+   - 🥇 **RECOMENDADO el 25/Sep: KOTLIN (Jetpack Compose), no Flutter.** Contexto real: **Android Studio ya
+     está instalado** y **ya hicieron una app Kotlin** (la del fixture del Mundial); el target es **solo
+     Android**; y es una app **de audio**.
+     - **No se paga el costo de entrada**: Flutter = SDK nuevo (~1 GB) + **aprender Dart** + rehacer la app.
+       Con Kotlin se sigue sobre lo que ya saben.
+     - **La ventaja de Flutter (multiplataforma) no aplica acá**: el target es Android, e iOS necesita Mac +
+       cuenta paga (estamos en Linux). Y si algún día se quiere **app de escritorio**, **Compose
+       Multiplatform** (JetBrains **v2.4.20**; Android/desktop/iOS **stable**, web beta — verificado hoy)
+       **reusa la misma UI de Compose** → Kotlin tampoco encierra en Android.
+     - **El audio ES el producto**: `androidx.media3` (ExoPlayer) da `ClippingMediaSource` (con `Builder` y
+       `setStart/EndPositionUs`) para el **loop A/B**, el **modo repetir** para loopearlo, velocidad
+       (`PlaybackParameters`) y **varias instancias** para comparar stems, + `MediaSession`
+       (fondo/notificación). Los paquetes de Flutter (`just_audio`) son **wrappers de estas mismas APIs**.
+       (Nota: `ClippingMediaSource` es `@UnstableApi` → `@OptIn(UnstableApi::class)`; es lo normal en ExoPlayer.)
+     - **Offline y archivos, de fábrica**: WorkManager (bajar stems en Opus) + Room/DataStore (cachear
+       análisis/recursos) + Storage Access Framework.
+     - **Diagramas**: en Compose se dibujan con **Canvas** (~50 líneas: líneas, círculos, texto) y quedan
+       **interactivos** (tocar la nota, animar el mástil); el informe HTML se embebe con `AndroidView`+WebView.
+     - **Camino incremental desde la app del fixture**: **(1)** WebView + network security config + token →
+       APK en **~1 día** mostrando la UI web; **(2)** crecer a nativo por partes: media3 (loop/velocidad),
+       offline (Opus + Room), Canvas (diagramas). **Envolver la web no es un callejón sin salida: es el F1 barato.**
+     - **Dónde Flutter sí sería mejor** (para ser justos): si se quisiera iOS, o una sola base
+       celu+escritorio+web, o si no se supiera Kotlin/Android. **Ninguna aplica hoy.**
+   - 🍎 **¿Y si después se quiere iOS / subirla al market?** — preguntado el 25/Sep (tiene una **Mac Intel
+     "de las últimas"**). **Respuesta: NO existe un "exportar" (no hay botón), pero es una de las rutas MÁS
+     BARATAS que hay**, y con **KMP se hace sin reescribir**:
+     - ⛔ **La Mac es obligatoria**: los docs de Kotlin/Native lo dicen textual — *"Building final binaries
+       for Apple targets **on Linux and Windows is also not possible**"*.
+     - ✅ **Kotlin Multiplatform**: un mismo proyecto con targets `androidTarget` + `iosArm64`. Se comparte
+       la lógica (~100%: Ktor, modelos, kotlinx.serialization, estado, cache) y —con **Compose
+       Multiplatform**, iOS **stable**— **la UI (~90%)**. `iosArm64` (dispositivo real) es **Tier 1**.
+     - ❗ **Lo que NO se comparte: el AUDIO.** `media3`/ExoPlayer es **solo Android** → en iOS va
+       **AVFoundation** (`AVPlayer`/`AVAudioEngine` para los stems, `AVAudioUnitTimePitch` para velocidad
+       sin cambiar el tono), con `expect/actual` (`expect fun crearReproductor()` + 2 implementaciones).
+       **Es la única parte que se escribe dos veces** (y el módulo de audio es chico).
+     - ⚠️ **Los 2 asteriscos de la Mac Intel** (verificado el 25/Sep en las tablas de Apple y de Kotlin):
+       **(1)** La App Store **exige Xcode 26+** para subir un app iOS (App Store Connect Help: *"iOS app …
+       built using Xcode 26 or later"*), y **Xcode 26.x pide macOS Tahoe 26.2+** (Xcode 27, Tahoe 26.6+).
+       → **Si tu Intel llega a macOS 26 Tahoe, TODAVÍA podés publicar**; hay que **verificar el modelo
+       exacto** (Tahoe fue la **última** con soporte Intel y solo para los modelos más nuevos). **La ventana
+       es de ~1-2 años**: cuando Apple exija Xcode 28 (macOS 27+ = solo Apple silicon), se terminó.
+       **(2)** **El simulador en Intel** usa `iosX64`, que Kotlin tiene en **Tier 3** (*"not in active
+       development… may come with breaking issues. Use them with caution"*), y sus hermanos x86_64
+       (`macosX64`, `watchosX64`, `tvosX64`) **ya están deprecados desde Kotlin 2.3.20**.
+     - 💰 **Subir al market**: Apple **u$s99/año** (obligatorio, incluso si es gratis) vs Google Play
+       **u$s25 una sola vez** (y en cuentas personales nuevas, prueba cerrada con testers antes de producción).
+     - ⚠️ **Riesgo de review si el objetivo es "marketearla"**: una app que **solo funciona contra tu PC**
+       puede ser rechazada por **§4.2 "Minimum Functionality"**. Lo que la salva es el **modo OFFLINE** real
+       (contenido y análisis en el teléfono) → otra razón para priorizarlo.
+     - ⚠️ **Nunca empaquetar el audio** (Led Zeppelin) en la APK/IPA: la app reproduce lo que sube el
+       usuario, **no distribuye música**.
+     - ✅ **Decisión de HOY para no cerrar la puerta (cuesta ~1 h)**: **(1)** la lógica pura en un **módulo
+       Kotlin sin imports de Android** (`:core`); **(2)** el **audio detrás de una interfaz**
+       (`Reproductor`) con la implementación media3 aparte; **(3)** **no arrancar con Compose Multiplatform**
+       el día 1 (JetBrains lo documenta como adopción "gradual"). Así, el día que haya Mac+iOS, es
+       **agregar un target**, no un rewrite.
+   - ⚠️ **Trampa técnica que aplica a las 3 opciones** (docs de Android, verificado hoy): Android **bloquea el
+     HTTP sin HTTPS** ("cleartext") por defecto en **`targetSdk` 28+** → como el servidor es
+     `http://192.168.x.x:8765`, hay que habilitarlo con **`android:usesCleartextTraffic`** o (mejor) una
+     **Network Security Config que permita cleartext solo a la IP local**. El doc aclara que **WebView
+     también lo respeta** (target API 26+): sin esto **no carga ni la web ni Flutter**. Es el error #1 de
+     este tipo de apps. Sumar: permiso **`INTERNET`**, **token** en la URL (el server ejecuta comandos) y
+     un **QR** con la IP+token para no hardcodear la IP.
    - ⚠️ **Seguridad al abrir a la red**: para que el celular llegue, el servidor debe escuchar en la
      **LAN** (no solo `127.0.0.1`) → **token obligatorio**; y conviene un **modo solo-lectura** para el
      teléfono (listar, ver informes, reproducir) dejando las acciones solo desde la PC.
