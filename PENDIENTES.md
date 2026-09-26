@@ -19,8 +19,8 @@ tocado hoy: este `PENDIENTES.md` (**sin commitear**).
 
 ## 🎯 Para retomar mañana
 
-Estado: **19 commits**, `main` ↔ `origin/main`, **23 archivos versionados**; working tree **limpio** (el plan
-de negocio es local y está en `.gitignore`). Retomá con *"leé `~/proyectos/spleeter/PENDIENTES.md` y seguimos"*.
+Estado: `main` ↔ `origin/main` **al día** · **23 archivos versionados** · working tree **limpio** (el plan de
+negocio es local y está en `.gitignore`). Retomá con *"leé `~/proyectos/spleeter/PENDIENTES.md` y seguimos"*.
 
 **🧭 Premisa del proyecto (25/Sep):** *"Ambición sí, frustración 0. Que llegue donde llegue, que salga lo que
 salga."* → **cero gasto hasta que una fase lo pida por criterio** · **una fase por vez y cada una termina en
